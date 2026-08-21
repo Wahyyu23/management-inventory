@@ -70,9 +70,11 @@ export function ProductStep({ onNext, onBack }: ProductStepProps) {
 
           <Dialog>
             <DialogTrigger>
-              <Button variant="outline" className="mt-3">
-                Add new
-              </Button>
+              {
+                <Button variant="outline" className="mt-3">
+                  Add new
+                </Button>
+              }
             </DialogTrigger>
 
             <DialogContent>
@@ -132,7 +134,7 @@ export function ProductStep({ onNext, onBack }: ProductStepProps) {
           </Dialog>
         </div>
       </div>
-      <div className="flex items-center justify-end gap-3 border-t pt-6">
+      <div className="flex items-center justify-between border-t pt-6">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>

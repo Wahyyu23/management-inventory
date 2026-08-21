@@ -5,6 +5,10 @@ import { useState } from "react";
 import { ReceivingStepper } from "./ReceivingStepper";
 import { ReceivingInfoStep } from "./steps/ReceivingInfoStep";
 import { ProductStep } from "./steps/ProductStep";
+import { InspectionStep } from "./steps/InspectionStep";
+import { RfidStep } from "./steps/RfidStep";
+import { ItemInformationStep } from "./steps/ItemInformationStep";
+import { ReviewStep } from "./steps/ReviewStep";
 
 export function ReceivingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,6 +30,18 @@ export function ReceivingWizard() {
 
         {currentStep === 2 && (
           <ProductStep onBack={handleBack} onNext={handleNext} />
+        )}
+        {currentStep === 3 && (
+          <InspectionStep onBack={handleBack} onNext={handleNext} />
+        )}
+        {currentStep === 4 && (
+          <RfidStep onBack={handleBack} onNext={handleNext} />
+        )}
+        {currentStep === 5 && (
+          <ItemInformationStep onBack={handleBack} onNext={handleNext} />
+        )}
+        {currentStep === 6 && (
+          <ReviewStep onBack={handleBack} />
         )}
       </div>
     </div>
