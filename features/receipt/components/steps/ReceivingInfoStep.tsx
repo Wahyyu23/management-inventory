@@ -1,3 +1,7 @@
+"use client";
+
+import { Controller, useFormContext, useWatch } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -9,51 +13,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+
 import { useWarehouses } from "../../hooks/useWarehouses";
 import { useLocations } from "../../hooks/useLocations";
-
-const warehouses = [
-  {
-    label: "Main Warehouse",
-    value: "main-warehouse",
-  },
-  {
-    label: "Secondary Warehouse",
-    value: "secondary-warehouse",
-  },
-];
-
-const locations = [
-  {
-    label: "Zone A",
-    value: "zone-a",
-  },
-  {
-    label: "Zone B",
-    value: "zone-b",
-  },
-];
+import type { ReceivingFormValues } from "../../schema/receiving.schema";
 
 type ReceivingInfoStepProps = {
   onNext: () => void;
 };
 
 export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
-  const [warehouseId, setWarehouseId] = useState("");
-  const [locationId, setLocationId] = useState("");
+  const {
+    register,
+    control,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useFormContext<ReceivingFormValues>();
+
+  const warehouseId = useWatch({
+    control,
+    name: "warehouse_id",
+  });
 
   const {
-    warehouses,
+    warehousesOptions,
     isLoading: isLoadingWarehouses,
     isError: isErrorWarehouses,
   } = useWarehouses();
 
   const {
-    locations,
+    locationsOptions,
     isLoading: isLoadingLocations,
     isError: isErrorLocations,
-  } = useLocations (warehouseId || undefined);
+  } = useLocations(warehouseId || undefined);
+
+  async function handleNextStep() {
+    const isValid = await trigger([
+      "purchase_reference_number",
+      "warehouse_id",
+      "location_id",
+    ]);
+
+    if (!isValid) {
+      return;
+    }
+
+    onNext();
+  }
 
   return (
     <div className="space-y-8">
@@ -76,56 +83,155 @@ export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
           <Input
             id="purchase-reference"
             placeholder="Enter purchase reference number"
+            {...register("purchase_reference_number")}
           />
+
+          {errors.purchase_reference_number && (
+            <p className="text-sm text-destructive">
+              {errors.purchase_reference_number.message}
+            </p>
+          )}
         </Field>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel>Warehouse</FieldLabel>
 
-            <Select items={warehouses}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select warehouse" />
-              </SelectTrigger>
+            <Controller
+              name="warehouse_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  items={warehousesOptions}
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value ?? "");
 
-              <SelectContent>
-                <SelectGroup>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem key={warehouse.value} value={warehouse.value}>
-                      {warehouse.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                    setValue("location_id", "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                  disabled={isLoadingWarehouses || isErrorWarehouses}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        isLoadingWarehouses
+                          ? "Loading warehouses..."
+                          : "Select warehouse"
+                      }
+                    />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectGroup>
+                      {warehousesOptions.map((warehouse) => (
+                        <SelectItem
+                          key={warehouse.value}
+                          value={warehouse.value}
+                        >
+                          {warehouse.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.warehouse_id && (
+              <p className="text-sm text-destructive">
+                {errors.warehouse_id.message}
+              </p>
+            )}
+
+            {isErrorWarehouses && (
+              <p className="text-sm text-destructive">
+                Failed to load warehouses.
+              </p>
+            )}
+
+            {!isLoadingWarehouses &&
+              !isErrorWarehouses &&
+              warehousesOptions.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No warehouses available.
+                </p>
+              )}
           </Field>
 
           <Field>
             <FieldLabel>Location / Zone</FieldLabel>
 
-            <Select items={locations}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
+            <Controller
+              name="location_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  items={locationsOptions}
+                  value={field.value}
+                  onValueChange={(value) => field.onChange(value ?? "")}
+                  disabled={
+                    !warehouseId || isLoadingLocations || isErrorLocations
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        !warehouseId
+                          ? "Select warehouse first"
+                          : isLoadingLocations
+                            ? "Loading locations..."
+                            : "Select location"
+                      }
+                    />
+                  </SelectTrigger>
 
-              <SelectContent>
-                <SelectGroup>
-                  {locations.map((location) => (
-                    <SelectItem key={location.value} value={location.value}>
-                      {location.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                  <SelectContent>
+                    <SelectGroup>
+                      {locationsOptions.map((location) => (
+                        <SelectItem key={location.value} value={location.value}>
+                          {location.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+
+            {errors.location_id && (
+              <p className="text-sm text-destructive">
+                {errors.location_id.message}
+              </p>
+            )}
+
+            {isErrorLocations && (
+              <p className="text-sm text-destructive">
+                Failed to load locations.
+              </p>
+            )}
+
+            {warehouseId &&
+              !isLoadingLocations &&
+              !isErrorLocations &&
+              locationsOptions.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No locations available for this warehouse.
+                </p>
+              )}
           </Field>
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 border-t pt-6">
-        <Button variant="outline">Cancel</Button>
+        <Button type="button" variant="outline">
+          Cancel
+        </Button>
 
-        <Button onClick={onNext}>Next</Button>
+        <Button type="button" onClick={handleNextStep}>
+          Next
+        </Button>
       </div>
     </div>
   );
