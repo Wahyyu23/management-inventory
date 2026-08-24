@@ -9,6 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useState } from "react";
+import { useWarehouses } from "../../hooks/useWarehouses";
+import { useLocations } from "../../hooks/useLocations";
 
 const warehouses = [
   {
@@ -33,12 +36,25 @@ const locations = [
 ];
 
 type ReceivingInfoStepProps = {
-    onNext: () => void;
-}
+  onNext: () => void;
+};
 
-export function ReceivingInfoStep({
-    onNext,
-}: ReceivingInfoStepProps) {
+export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
+  const [warehouseId, setWarehouseId] = useState("");
+  const [locationId, setLocationId] = useState("");
+
+  const {
+    warehouses,
+    isLoading: isLoadingWarehouses,
+    isError: isErrorWarehouses,
+  } = useWarehouses();
+
+  const {
+    locations,
+    isLoading: isLoadingLocations,
+    isError: isErrorLocations,
+  } = useLocations (warehouseId || undefined);
+
   return (
     <div className="space-y-8">
       <div>
@@ -75,10 +91,7 @@ export function ReceivingInfoStep({
               <SelectContent>
                 <SelectGroup>
                   {warehouses.map((warehouse) => (
-                    <SelectItem
-                      key={warehouse.value}
-                      value={warehouse.value}
-                    >
+                    <SelectItem key={warehouse.value} value={warehouse.value}>
                       {warehouse.label}
                     </SelectItem>
                   ))}
@@ -98,10 +111,7 @@ export function ReceivingInfoStep({
               <SelectContent>
                 <SelectGroup>
                   {locations.map((location) => (
-                    <SelectItem
-                      key={location.value}
-                      value={location.value}
-                    >
+                    <SelectItem key={location.value} value={location.value}>
                       {location.label}
                     </SelectItem>
                   ))}
@@ -113,13 +123,9 @@ export function ReceivingInfoStep({
       </div>
 
       <div className="flex items-center justify-end gap-3 border-t pt-6">
-        <Button variant="outline">
-          Cancel
-        </Button>
+        <Button variant="outline">Cancel</Button>
 
-        <Button onClick={onNext}>
-          Next
-        </Button>
+        <Button onClick={onNext}>Next</Button>
       </div>
     </div>
   );
