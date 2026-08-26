@@ -16,17 +16,27 @@ export const createMasterProductSchema =
       ),
 
     category: z.enum(
-      MASTER_PRODUCT_CATEGORIES
+      MASTER_PRODUCT_CATEGORIES,
+      {
+        error: "Product category is required.",
+      }
     ),
 
     measurement: z.enum(
-      MASTER_PRODUCT_MEASUREMENT
+      MASTER_PRODUCT_MEASUREMENT,
+      {
+        error: "Product measurement is required.",
+      }
     ),
 
     description: z
       .string()
       .trim()
       .optional(),
+
+    brand: z
+      .string()
+      .trim(),
   });
 
 export type CreateMasterProductFormValues =

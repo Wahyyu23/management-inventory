@@ -20,13 +20,13 @@ export const MASTER_PRODUCT_MEASUREMENT = [
   "liter",
 ] as const;
 
-export const MASTER_PRODUCT_CATEGORY_OPTIONS = [
-  MASTER_PRODUCT_CATEGORIES.map((value) => ({
+export const MASTER_PRODUCT_CATEGORY_OPTIONS = MASTER_PRODUCT_CATEGORIES.map(
+  (value) => ({
     value,
     label:
       value === "Administration Tools(path)$0" ? "Administration Tools" : value,
-  })),
-];
+  }),
+);
 
 export const MASTER_PRODUCT_MEASUREMENT_OPTIONS =
   MASTER_PRODUCT_MEASUREMENT.map((value) => ({
