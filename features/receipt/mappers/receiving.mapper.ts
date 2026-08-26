@@ -1,4 +1,9 @@
-import { Location, SelectOption, Warehouse } from "../types/receiving.types";
+import {
+  Location,
+  MasterProduct,
+  SelectOption,
+  Warehouse,
+} from "../types/receiving.types";
 
 export function mapWarehouseToOption(warehouse: Warehouse): SelectOption {
   return {
@@ -22,4 +27,19 @@ export function mapLocationToOption(location: Location): SelectOption {
 
 export function mapLocationsToOptions(locations: Location[]): SelectOption[] {
   return locations.map(mapLocationToOption);
+}
+
+export function mapMasterProductToOption(
+  masterProduct: MasterProduct,
+): SelectOption {
+  return {
+    label: masterProduct.name,
+    value: masterProduct.id,
+  };
+}
+
+export function mapMasterProductsToOptions(
+  masterProduct: MasterProduct[],
+): SelectOption[] {
+  return masterProduct.map(mapMasterProductToOption);
 }

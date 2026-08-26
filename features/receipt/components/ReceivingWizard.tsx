@@ -26,6 +26,7 @@ export function ReceivingWizard() {
       purchase_reference_number: "",
       warehouse_id: "",
       location_id: "",
+      master_product_id: "",
     },
 
     shouldUnregister: false,

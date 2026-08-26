@@ -9,6 +9,8 @@ export const receivingFormSchema = z.object({
   warehouse_id: z.string().min(1, "Warehouse is required"),
 
   location_id: z.string().min(1, "Location is required"),
+
+  master_product_id: z.string().min(1, "Master product is required."),
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;

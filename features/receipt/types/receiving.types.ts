@@ -1,3 +1,5 @@
+import { MASTER_PRODUCT_CATEGORIES, MASTER_PRODUCT_MEASUREMENT } from "../constants/master-product.constants";
+
 export type WarehousesStatus = "active" | "inactive";
 
 export type Warehouse = {
@@ -36,3 +38,37 @@ export type SelectOption = {
   label: string;
   value: string;
 };
+
+export type MasterProductCategory = 
+(typeof MASTER_PRODUCT_CATEGORIES)[number];
+
+export type MasterProductMeasurement = 
+(typeof MASTER_PRODUCT_MEASUREMENT)[number];
+
+export type MasterProductInput = {
+    name: string,
+    category: MasterProductCategory,
+    measurement: MasterProductMeasurement,
+    brand: string,
+    description?: string
+}
+
+export type MasterProduct = {
+    id: string,
+    name: string,
+    category: MasterProductCategory,
+    measurement: MasterProductMeasurement,
+    brand: string,
+    description?: string
+}
+
+export type MasterProductListResponse = {
+    success: boolean,
+    data: MasterProduct[],
+    meta: PaginationMeta | null
+}
+
+export type MasterProductCreateResponse = {
+    success: boolean,
+    data: MasterProduct
+}
