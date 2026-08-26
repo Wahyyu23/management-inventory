@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ReceivingFormValues } from "../../schema/receiving.schema";
+import { useFormContext } from "react-hook-form";
 
 type InspectionStepProps = {
   onNext: () => void;
@@ -24,10 +26,6 @@ const conditions = [
     value: "good",
   },
   {
-    label: "Minor Damage",
-    value: "minor-damage",
-  },
-  {
     label: "Damaged",
     value: "damaged",
   },
@@ -37,6 +35,15 @@ export function InspectionStep({
   onNext,
   onBack,
 }: InspectionStepProps) {
+
+  const {
+    register,
+    control,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useFormContext<ReceivingFormValues>();
+
   const [condition, setCondition] = useState<string | null>(null);
 
   const requiresDescription =

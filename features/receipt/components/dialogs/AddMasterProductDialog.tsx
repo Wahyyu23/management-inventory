@@ -48,6 +48,7 @@ export function AddMasterProductDialog({
     control,
     handleSubmit,
     reset,
+    setValue,
 
     formState: { errors, isSubmitting },
   } = useForm<CreateMasterProductFormValues>({
@@ -60,6 +61,14 @@ export function AddMasterProductDialog({
 
     mode: "onTouched",
   });
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      reset();
+      setSubmitError(null);
+    }
+    setOpen(nextOpen);
+  }
 
   async function handleCreateProduct(values: CreateMasterProductFormValues) {
     try {
@@ -76,9 +85,7 @@ export function AddMasterProductDialog({
       const response = await createMasterProduct(input);
       await onCreated(response.data);
 
-      reset();
-
-      setOpen(false);
+      handleOpenChange(false);
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -89,7 +96,7 @@ export function AddMasterProductDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={<Button type="button" variant="outline" className="mt-3" />}
       >
@@ -132,7 +139,13 @@ export function AddMasterProductDialog({
                 <Select
                   items={MASTER_PRODUCT_CATEGORY_OPTIONS}
                   value={field.value ?? null}
-                  onValueChange={(value) => field.onChange(value ?? undefined)}
+                  onValueChange={(value) => {
+                    setValue("category", value!, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select category" />
@@ -181,7 +194,13 @@ export function AddMasterProductDialog({
                 <Select
                   items={MASTER_PRODUCT_MEASUREMENT_OPTIONS}
                   value={field.value ?? null}
-                  onValueChange={(value) => field.onChange(value ?? undefined)}
+                  onValueChange={(value) => {
+                    setValue("measurement", value!, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    });
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select measurement" />
@@ -228,8 +247,7 @@ export function AddMasterProductDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
-              
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>

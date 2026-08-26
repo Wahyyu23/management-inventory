@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  Controller,
-  useFormContext,
-} from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Combobox,
   ComboboxContent,
@@ -32,56 +26,36 @@ type ProductStepProps = {
   onBack: () => void;
 };
 
-export function ProductStep({
-  onNext,
-  onBack,
-}: ProductStepProps) {
+export function ProductStep({ onNext, onBack }: ProductStepProps) {
   const {
     control,
     setValue,
     trigger,
 
-    formState: {
-      errors,
-    },
-  } =
-    useFormContext<ReceivingFormValues>();
+    formState: { errors },
+  } = useFormContext<ReceivingFormValues>();
 
   const {
     masterProductsOptions,
 
-    isLoading:
-      isLoadingMasterProducts,
+    isLoading: isLoadingMasterProducts,
 
-    isError:
-      isErrorMasterProducts,
+    isError: isErrorMasterProducts,
 
     addMasterProductToCache,
   } = useMasterProducts();
 
-  async function handleProductCreated(
-    product: MasterProduct
-  ) {
-    await addMasterProductToCache(
-      product
-    );
+  async function handleProductCreated(product: MasterProduct) {
+    await addMasterProductToCache(product);
 
-    setValue(
-      "master_product_id",
-      product.id,
-      {
-        shouldDirty: true,
-        shouldValidate: true,
-      }
-    );
+    setValue("master_product_id", product.id, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   }
 
-  
   async function handleNextStep() {
-    const isValid =
-      await trigger(
-        "master_product_id"
-      );
+    const isValid = await trigger("master_product_id");
 
     if (!isValid) {
       return;
@@ -98,54 +72,37 @@ export function ProductStep({
         </h2>
 
         <p className="mt-1 text-small text-muted-foreground">
-          Search and select the master
-          product for the incoming item
+          Search and select the master product for the incoming item
         </p>
       </div>
 
       <div className="space-y-6">
         <Field>
-          <FieldLabel>
-            Master Product
-          </FieldLabel>
+          <FieldLabel>Master Product</FieldLabel>
 
-    
           <Controller
             name="master_product_id"
             control={control}
             render={({ field }) => {
               const selectedProduct =
                 masterProductsOptions.find(
-                  (product) =>
-                    product.value ===
-                    field.value
+                  (product) => product.value === field.value,
                 ) ?? null;
 
               return (
                 <Combobox
-                  items={
-                    masterProductsOptions
+                  items={masterProductsOptions}
+                  value={selectedProduct}
+
+                  onValueChange={(product) =>
+                    setValue("master_product_id", product?.value ?? "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                      shouldTouch: true,
+                    })
                   }
-                  value={
-                    selectedProduct
-                  }
-                  onValueChange={(
-                    product
-                  ) =>
-                    field.onChange(
-                      product?.value ??
-                        ""
-                    )
-                  }
-                  itemToStringValue={(
-                    product
-                  ) =>
-                    product.label
-                  }
-                  disabled={
-                    isLoadingMasterProducts ||
-                    isErrorMasterProducts
-                  }
+                  itemToStringValue={(product) => product.label}
+                  disabled={isLoadingMasterProducts || isErrorMasterProducts}
                 >
                   <ComboboxInput
                     placeholder={
@@ -156,21 +113,12 @@ export function ProductStep({
                   />
 
                   <ComboboxContent>
-                    <ComboboxEmpty>
-                      No results found.
-                    </ComboboxEmpty>
+                    <ComboboxEmpty>No results found.</ComboboxEmpty>
 
                     <ComboboxList>
                       {(product) => (
-                        <ComboboxItem
-                          key={
-                            product.value
-                          }
-                          value={product}
-                        >
-                          {
-                            product.label
-                          }
+                        <ComboboxItem key={product.value} value={product}>
+                          {product.label}
                         </ComboboxItem>
                       )}
                     </ComboboxList>
@@ -182,60 +130,40 @@ export function ProductStep({
 
           {errors.master_product_id && (
             <p className="text-sm text-destructive">
-              {
-                errors
-                  .master_product_id
-                  .message
-              }
+              {errors.master_product_id.message}
             </p>
           )}
 
-
           {isErrorMasterProducts && (
             <p className="text-sm text-destructive">
-              Failed to load master
-              products.
+              Failed to load master products.
             </p>
           )}
 
           {!isLoadingMasterProducts &&
             !isErrorMasterProducts &&
-            masterProductsOptions.length ===
-              0 && (
+            masterProductsOptions.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                No master products
-                available.
+                No master products available.
               </p>
             )}
         </Field>
 
         <div className="rounded-lg border border-dashed p-4">
           <p className="text-small text-muted-foreground">
-            Can&apos;t find the master
-            product?
+            Can&apos;t find the master product?
           </p>
 
-          <AddMasterProductDialog
-            onCreated={
-              handleProductCreated
-            }
-          />
+          <AddMasterProductDialog onCreated={handleProductCreated} />
         </div>
       </div>
 
       <div className="flex items-center justify-between border-t pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-        >
+        <Button type="button" variant="outline" onClick={onBack}>
           Back
         </Button>
 
-        <Button
-          type="button"
-          onClick={handleNextStep}
-        >
+        <Button type="button" onClick={handleNextStep}>
           Next
         </Button>
       </div>

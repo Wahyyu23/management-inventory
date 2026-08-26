@@ -28,6 +28,7 @@ export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
     control,
     setValue,
     trigger,
+    clearErrors,
     formState: { errors },
   } = useFormContext<ReceivingFormValues>();
 
@@ -105,12 +106,18 @@ export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
                   items={warehousesOptions}
                   value={field.value}
                   onValueChange={(value) => {
-                    field.onChange(value ?? "");
-
-                    setValue("location_id", "", {
+                    setValue("warehouse_id", value ?? "", {
                       shouldDirty: true,
                       shouldValidate: true,
+                      shouldTouch: true,
                     });
+                    setValue("location_id", "", {
+                      shouldDirty: true,
+                      shouldValidate: false,
+                      shouldTouch: false,
+                    });
+
+                    clearErrors("location_id");
                   }}
                   disabled={isLoadingWarehouses || isErrorWarehouses}
                 >
@@ -170,7 +177,14 @@ export function ReceivingInfoStep({ onNext }: ReceivingInfoStepProps) {
                 <Select
                   items={locationsOptions}
                   value={field.value}
-                  onValueChange={(value) => field.onChange(value ?? "")}
+                  onValueChange={(value) => {
+                    setValue("location_id", value ?? "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                      shouldTouch: true,
+                    });
+                  }}
+
                   disabled={
                     !warehouseId || isLoadingLocations || isErrorLocations
                   }
