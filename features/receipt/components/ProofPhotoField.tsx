@@ -1,13 +1,44 @@
+"use client";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useEffect, useRef, useState } from "react";
 
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png"];
+const MAX_PHOTO_SIZE =
+  5 * 1024 * 1024;
 
-function validatePhoto(file: File): string | null {
-  if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+const ALLOWED_PHOTO_TYPES = [
+  "image/jpeg",
+  "image/png",
+];
+
+type ProofPhotoFieldProps = {
+  value: File | null;
+
+  onChange: (
+    file: File | null
+  ) => void;
+
+  error?: string | null;
+};
+
+function validatePhoto(
+  file: File
+): string | null {
+  if (
+    !ALLOWED_PHOTO_TYPES.includes(
+      file.type
+    )
+  ) {
     return "Only JPEG and PNG images are allowed.";
   }
 
@@ -18,25 +49,68 @@ function validatePhoto(file: File): string | null {
   return null;
 }
 
-export function ProofPhotoField() {
-  const [proofPhoto, setProofPhoto] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export function ProofPhotoField({
+  value,
+  onChange,
+  error,
+}: ProofPhotoFieldProps) {
+
+  const [
+    previewUrl,
+    setPreviewUrl,
+  ] = useState<string | null>(null);
+
+  const [
+    photoError,
+    setPhotoError,
+  ] = useState<string | null>(null);
+
+  const fileInputRef =
+    useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
-    if (!previewUrl) {
+    if (!value) {
       return;
     }
 
-    return () => {
-      URL.revokeObjectURL(previewUrl);
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (
+        typeof reader.result === "string"
+      ) {
+        setPreviewUrl(
+          reader.result
+        );
+      }
     };
-  }, [previewUrl]);
+
+    reader.onerror = () => {
+      setPreviewUrl(null);
+
+      setPhotoError(
+        "Failed to preview the selected image."
+      );
+    };
+
+    reader.readAsDataURL(value);
+
+    return () => {
+
+      if (
+        reader.readyState ===
+        FileReader.LOADING
+      ) {
+        reader.abort();
+      }
+    };
+  }, [value]);
 
   function resetFileInput() {
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value =
+        "";
     }
   }
 
@@ -46,52 +120,67 @@ export function ProofPhotoField() {
     fileInputRef.current?.click();
   }
 
-  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  function handlePhotoChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    const validationError = validatePhoto(file);
+    const validationError =
+      validatePhoto(file);
 
     if (validationError) {
-      setPhotoError(validationError);
+      setPhotoError(
+        validationError
+      );
 
       resetFileInput();
 
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
-
     setPhotoError(null);
-    setProofPhoto(file);
-    setPreviewUrl(objectUrl);
+    onChange(file);
   }
 
   function handleRemovePhoto() {
-    setProofPhoto(null);
-    setPreviewUrl(null);
     setPhotoError(null);
+    setPreviewUrl(null);
+
     resetFileInput();
+
+    onChange(null);
   }
+
+  const displayedError =
+    photoError ?? error;
 
   return (
     <Field className="h-full">
-      <FieldLabel>Proof Photo</FieldLabel>
+      <FieldLabel>
+        Proof Photo
+      </FieldLabel>
 
       <Input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg, image/png"
-        onChange={handlePhotoChange}
+        accept="image/jpeg,image/png"
+        onChange={
+          handlePhotoChange
+        }
+        className="hidden"
       />
 
       {!previewUrl ? (
         <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed border-border px-6 py-8 text-center">
           <div className="space-y-2">
-            <p className="font-medium text-foreground">Upload proof photo</p>
+            <p className="font-medium text-foreground">
+              Upload proof photo
+            </p>
 
             <p className="text-sm text-muted-foreground">
               JPG or PNG, maximum 5 MB
@@ -102,7 +191,9 @@ export function ProofPhotoField() {
             type="button"
             variant="outline"
             className="mt-4"
-            onClick={handleChoosePhoto}
+            onClick={
+              handleChoosePhoto
+            }
           >
             Choose Photo
           </Button>
@@ -120,12 +211,17 @@ export function ProofPhotoField() {
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">
-                {proofPhoto?.name}
+                {value?.name}
               </p>
 
-              {proofPhoto && (
+              {value && (
                 <p className="text-xs text-muted-foreground">
-                  {(proofPhoto.size / 1024 / 1024).toFixed(2)} MB
+                  {(
+                    value.size /
+                    1024 /
+                    1024
+                  ).toFixed(2)}{" "}
+                  MB
                 </p>
               )}
             </div>
@@ -135,7 +231,9 @@ export function ProofPhotoField() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleChoosePhoto}
+                onClick={
+                  handleChoosePhoto
+                }
               >
                 Replace
               </Button>
@@ -144,7 +242,9 @@ export function ProofPhotoField() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleRemovePhoto}
+                onClick={
+                  handleRemovePhoto
+                }
               >
                 Remove
               </Button>
@@ -153,7 +253,11 @@ export function ProofPhotoField() {
         </div>
       )}
 
-      {photoError && <p className="text-sm text-destructive">{photoError}</p>}
+      {displayedError && (
+        <p className="text-sm text-destructive">
+          {displayedError}
+        </p>
+      )}
     </Field>
   );
 }
