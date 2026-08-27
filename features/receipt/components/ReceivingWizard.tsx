@@ -27,6 +27,7 @@ export function ReceivingWizard() {
       warehouse_id: "",
       location_id: "",
       master_product_id: "",
+      description: "",
     },
 
     shouldUnregister: false,

@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+// [REMOVED]
+// useState tidak lagi digunakan.
+// State Inspection sekarang dimiliki oleh React Hook Form.
+
+import {
+  Controller,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -12,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ReceivingFormValues } from "../../schema/receiving.schema";
-import { useFormContext } from "react-hook-form";
+
+import type { ReceivingFormValues } from "../../schema/receiving.schema";
 
 type InspectionStepProps = {
   onNext: () => void;
@@ -29,13 +37,12 @@ const conditions = [
     label: "Damaged",
     value: "damaged",
   },
-];
+] as const;
 
 export function InspectionStep({
   onNext,
   onBack,
 }: InspectionStepProps) {
-
   const {
     register,
     control,
@@ -44,10 +51,25 @@ export function InspectionStep({
     formState: { errors },
   } = useFormContext<ReceivingFormValues>();
 
-  const [condition, setCondition] = useState<string | null>(null);
 
-  const requiresDescription =
-    condition === "minor-damage" || condition === "damaged";
+  const condition = useWatch({
+    control,
+    name: "condition",
+  });
+
+
+  const isDamaged = condition === "damaged";
+
+
+  async function handleNextStep() {
+    const isValid = await trigger(["condition", "description"]);
+
+    if (!isValid) {
+      return;
+    }
+
+    onNext();
+  }
 
   return (
     <div className="space-y-8">
@@ -65,49 +87,88 @@ export function InspectionStep({
         <Field>
           <FieldLabel>Initial Condition</FieldLabel>
 
-          <Select
-            items={conditions}
-            value={condition}
-            onValueChange={setCondition}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select item condition" />
-            </SelectTrigger>
+          <Controller
+            name="condition"
+            control={control}
+            render={({ field }) => (
+              <Select
+                items={conditions}
+                value={field.value ?? null}
+                onValueChange={(value) => {
+                  if (value !== "good" && value !== "damaged") {
+                    return;
+                  }
 
-            <SelectContent>
-              {conditions.map((condition) => (
-                <SelectItem
-                  key={condition.value}
-                  value={condition.value}
-                >
-                  {condition.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  setValue("condition", value, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  });
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select item condition" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {conditions.map((condition) => (
+                    <SelectItem
+                      key={condition.value}
+                      value={condition.value}
+                    >
+                      {condition.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.condition && (
+            <p className="text-sm text-destructive">
+              {errors.condition.message}
+            </p>
+          )}
         </Field>
 
-        {requiresDescription && (
-          <Field>
-            <FieldLabel htmlFor="damage-description">
-              Damage Description
-            </FieldLabel>
+        <Field>
+          <FieldLabel htmlFor="inspection-description">
+            {isDamaged ? "Damage Description" : "Notes"}
+            <span className="ml-1 font-normal text-muted-foreground">
+            </span>
+          </FieldLabel>
 
-            <Textarea
-              id="damage-description"
-              placeholder="Describe the damage condition..."
-              className="min-h-28 resize-none"
-            />
-          </Field>
-        )}
+          <Textarea
+            id="inspection-description"
+            placeholder={
+              isDamaged
+                ? "Describe the damage condition..."
+                : "Add notes about the item condition..."
+            }
+            className="min-h-28 resize-none"
+            {...register("description")}
+          />
+
+          {errors.description && (
+            <p className="text-sm text-destructive">
+              {errors.description.message}
+            </p>
+          )}
+        </Field>
       </div>
 
       <div className="flex items-center justify-between border-t pt-6">
-        <Button variant="outline" onClick={onBack}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+        >
           Back
         </Button>
 
-        <Button onClick={onNext}>
+        <Button
+          type="button"
+          onClick={handleNextStep}
+        >
           Next
         </Button>
       </div>

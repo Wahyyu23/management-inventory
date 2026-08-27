@@ -11,6 +11,10 @@ export const receivingFormSchema = z.object({
   location_id: z.string().min(1, "Location is required"),
 
   master_product_id: z.string().min(1, "Master product is required."),
+
+  condition: z.enum(["good", "damaged"], { error: "Condition is required." }),
+
+  description: z.string().trim().min(1, "Description is required."),
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;
