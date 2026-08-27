@@ -19,6 +19,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 export function ReceivingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
 
+  const [proofPhoto, setProofPhoto] = useState<File | null>(null);
+
   const form = useForm<ReceivingFormValues>({
     resolver: zodResolver(receivingFormSchema),
 
@@ -44,28 +46,33 @@ export function ReceivingWizard() {
   }
 
   return (
-    <FormProvider {...form} >
-    <div className="rounded-xl border border-border bg-card p-6">
-      <ReceivingStepper currentStep={currentStep} />
+    <FormProvider {...form}>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <ReceivingStepper currentStep={currentStep} />
 
-      <div className="mt-8">
-        {currentStep === 1 && <ReceivingInfoStep onNext={handleNext} />}
+        <div className="mt-8">
+          {currentStep === 1 && <ReceivingInfoStep onNext={handleNext} />}
 
-        {currentStep === 2 && (
-          <ProductStep onBack={handleBack} onNext={handleNext} />
-        )}
-        {currentStep === 3 && (
-          <InspectionStep onBack={handleBack} onNext={handleNext} />
-        )}
-        {currentStep === 4 && (
-          <RfidStep onBack={handleBack} onNext={handleNext} />
-        )}
-        {currentStep === 5 && (
-          <ItemInformationStep onBack={handleBack} onNext={handleNext} />
-        )}
-        {currentStep === 6 && <ReviewStep onBack={handleBack} />}
+          {currentStep === 2 && (
+            <ProductStep onBack={handleBack} onNext={handleNext} />
+          )}
+          {currentStep === 3 && (
+            <InspectionStep
+              onBack={handleBack}
+              onNext={handleNext}
+              proofPhoto={proofPhoto}
+              onProofPhotoChange={setProofPhoto}
+            />
+          )}
+          {currentStep === 4 && (
+            <RfidStep onBack={handleBack} onNext={handleNext} />
+          )}
+          {currentStep === 5 && (
+            <ItemInformationStep onBack={handleBack} onNext={handleNext} />
+          )}
+          {currentStep === 6 && <ReviewStep onBack={handleBack} />}
+        </div>
       </div>
-    </div>
     </FormProvider>
   );
 }
