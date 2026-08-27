@@ -1,9 +1,5 @@
 "use client";
 
-// [REMOVED]
-// useState tidak lagi digunakan.
-// State Inspection sekarang dimiliki oleh React Hook Form.
-
 import {
   Controller,
   useFormContext,
