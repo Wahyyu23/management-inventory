@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/storage/supabase";
 import { ReceivingStepper } from "./ReceivingStepper";
 import { ReceivingInfoStep } from "./steps/ReceivingInfoStep";
 import { ProductStep } from "./steps/ProductStep";
@@ -18,9 +18,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 export function ReceivingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
-
   const [proofPhoto, setProofPhoto] = useState<File | null>(null);
-
+  const [urlPhoto, setUrlPhoto] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadPhotoError, setUploadPhotoError] = useState<string | null>(null);
   const form = useForm<ReceivingFormValues>({
     resolver: zodResolver(receivingFormSchema),
 
@@ -45,6 +46,42 @@ export function ReceivingWizard() {
     setCurrentStep((step) => Math.max(step - 1, 1));
   }
 
+  async function handlePhotoChange(file: File | null) {
+    setProofPhoto(file);
+    setUploadPhotoError(null);
+
+    if (!file) {
+      setUrlPhoto(null);
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      const filename = `${Date.now()}-${file.name}`;
+
+      const { error } = await supabase.storage
+        .from("photos")
+        .upload(filename, file);
+
+      if (error) {
+        throw error;
+      }
+
+      const { data } = supabase.storage.from("photos").getPublicUrl(filename);
+
+      setUrlPhoto(data.publicUrl);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setUploadPhotoError(
+        err instanceof Error ? err.message : "Upload Failed"
+      );
+      setUrlPhoto(null);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
   return (
     <FormProvider {...form}>
       <div className="rounded-xl border border-border bg-card p-6">
@@ -61,7 +98,7 @@ export function ReceivingWizard() {
               onBack={handleBack}
               onNext={handleNext}
               proofPhoto={proofPhoto}
-              onProofPhotoChange={setProofPhoto}
+              onProofPhotoChange={handlePhotoChange}
             />
           )}
           {currentStep === 4 && (
