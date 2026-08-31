@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 export function ReceivingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [proofPhoto, setProofPhoto] = useState<File | null>(null);
-  const [urlPhoto, setUrlPhoto] = useState<string | null>(null);
+  //const [urlPhoto, setUrlPhoto] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [uploadPhotoError, setUploadPhotoError] = useState<string | null>(null);
   const form = useForm<ReceivingFormValues>({
@@ -31,12 +31,15 @@ export function ReceivingWizard() {
       location_id: "",
       master_product_id: "",
       description: "",
+      proof_photo_url: "",
     },
 
     shouldUnregister: false,
 
     mode: "onTouched",
   });
+
+  const urlPhoto = form.watch("proof_photo_url");
 
   function handleNext() {
     setCurrentStep((step) => Math.min(step + 1, 6));
@@ -50,8 +53,13 @@ export function ReceivingWizard() {
     setProofPhoto(file);
     setUploadPhotoError(null);
 
+    form.setValue("proof_photo_url", "", {
+      shouldDirty: true,
+      shouldValidate: false,
+    });
+
     if (!file) {
-      setUrlPhoto(null);
+      setIsUploadingPhoto(false);
       return;
     }
 
@@ -70,13 +78,19 @@ export function ReceivingWizard() {
 
       const { data } = supabase.storage.from("photos").getPublicUrl(filename);
 
-      setUrlPhoto(data.publicUrl);
+      form.setValue("proof_photo_url", data.publicUrl, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     } catch (err) {
       console.error("Upload failed:", err);
-      setUploadPhotoError(
-        err instanceof Error ? err.message : "Upload Failed"
-      );
-      setUrlPhoto(null);
+
+      setUploadPhotoError(err instanceof Error ? err.message : "Upload Failed");
+
+      form.setValue("proof_photo_url", "", {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -99,6 +113,9 @@ export function ReceivingWizard() {
               onNext={handleNext}
               proofPhoto={proofPhoto}
               onProofPhotoChange={handlePhotoChange}
+              urlPhoto={urlPhoto}
+              isUploadingPhoto={isUploadingPhoto}
+              uploadPhotoError={uploadPhotoError}
             />
           )}
           {currentStep === 4 && (

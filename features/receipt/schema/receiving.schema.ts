@@ -15,6 +15,13 @@ export const receivingFormSchema = z.object({
   condition: z.enum(["good", "damaged"], { error: "Condition is required." }),
 
   description: z.string().trim().min(1, "Description is required."),
+
+  proof_photo_url: z.string().trim().min(1, "Proof photo is required.").url("Proof photo url is invalid."),
+
+  tag_code: z.string().trim().min(1, "Tag code is required.").startsWith(
+    "PSI-",
+    "Tag code must start with PSI-"
+  ),
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;

@@ -16,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ReceivingFormValues } from "../../schema/receiving.schema";
 
 import { ProofPhotoField } from "../ProofPhotoField";
-import { set } from "zod";
 import { useState } from "react";
 
 type InspectionStepProps = {
@@ -24,6 +23,9 @@ type InspectionStepProps = {
   onBack: () => void;
   proofPhoto: File | null;
   onProofPhotoChange: (file: File | null) => void;
+  urlPhoto: string | null;
+  isUploadingPhoto: boolean;
+  uploadPhotoError: string | null;
 };
 
 const conditions = [
@@ -37,13 +39,15 @@ const conditions = [
   },
 ] as const;
 
-export function InspectionStep(
-  { 
-    onNext, 
-    onBack,
-    proofPhoto,
-    onProofPhotoChange 
-  }: InspectionStepProps) {
+export function InspectionStep({
+  onNext,
+  onBack,
+  proofPhoto,
+  onProofPhotoChange,
+  urlPhoto,
+  isUploadingPhoto,
+  uploadPhotoError,
+}: InspectionStepProps) {
   const {
     register,
     control,
@@ -71,6 +75,14 @@ export function InspectionStep(
     onProofPhotoChange(file);
   }
 
+  function handleRetryUpload() {
+    if (!proofPhoto || isUploadingPhoto) {
+      return;
+    }
+
+    void onProofPhotoChange(proofPhoto);
+  }
+
   async function handleNextStep() {
     const isValid = await trigger(["condition", "description"]);
 
@@ -78,7 +90,7 @@ export function InspectionStep(
       setProofPhotoRequiredError("Proof photo is required.");
     }
 
-    if (!isValid || !proofPhoto) {
+    if (!isValid || !proofPhoto || isUploadingPhoto || !urlPhoto) {
       return;
     }
 
@@ -167,10 +179,14 @@ export function InspectionStep(
           </Field>
         </div>
 
-        <ProofPhotoField 
+        <ProofPhotoField
           value={proofPhoto}
           onChange={handleProofPhotoChange}
           error={proofPhotoRequiredError}
+          uploadError={uploadPhotoError}
+          isUploading={isUploadingPhoto}
+          isUploaded={!!urlPhoto}
+          onRetry={handleRetryUpload}
         />
       </div>
 
@@ -179,8 +195,12 @@ export function InspectionStep(
           Back
         </Button>
 
-        <Button type="button" onClick={handleNextStep}>
-          Next
+        <Button
+          type="button"
+          onClick={handleNextStep}
+          disabled={isUploadingPhoto || !urlPhoto}
+        >
+          {isUploadingPhoto ? "Uploading..." : "Next"}
         </Button>
       </div>
     </div>
