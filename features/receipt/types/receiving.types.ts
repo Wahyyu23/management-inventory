@@ -50,7 +50,7 @@ export type MasterProductInput = {
     category: MasterProductCategory,
     measurement: MasterProductMeasurement,
     brand: string,
-    description?: string
+    description?: string  
 }
 
 export type MasterProduct = {

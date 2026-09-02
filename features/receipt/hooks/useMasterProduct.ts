@@ -23,9 +23,11 @@ export function useMasterProducts(
     () => getMasterProducts(page, limit)
   );
 
+  const masterProduct = data?.data ?? [];
+
   const masterProductsOptions =
     mapMasterProductsToOptions(
-      data?.data ?? []
+      masterProduct
     );
 
   async function addMasterProductToCache(
@@ -84,6 +86,7 @@ export function useMasterProducts(
   }
 
   return {
+    masterProduct,
     masterProductsOptions,
     meta: data?.meta ?? null,
 

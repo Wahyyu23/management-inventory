@@ -1,12 +1,87 @@
 import { Button } from "@/components/ui/button";
+import { ReceivingFormValues } from "../../schema/receiving.schema";
+import { useFormContext, useWatch } from "react-hook-form";
+import { useWarehouses } from "../../hooks/useWarehouses";
+import { useLocations } from "../../hooks/useLocations";
+import { useMasterProducts } from "../../hooks/useMasterProduct";
 
 type ReviewStepProps = {
   onBack: () => void;
 };
 
-export function ReviewStep({
-  onBack,
-}: ReviewStepProps) {
+export function ReviewStep({ onBack }: ReviewStepProps) {
+  const { control } = useFormContext<ReceivingFormValues>();
+
+  const [
+    purchaseReferenceNumber,
+    warehouseId,
+    locationId,
+    masterProductId,
+    condition,
+    description,
+    proofPhotoUrl,
+    tagCode,
+    qty,
+    childUnitQty,
+  ] = useWatch({
+    control,
+    name: [
+      "purchase_reference_number",
+      "warehouse_id",
+      "location_id",
+      "master_product_id",
+      "condition",
+      "description",
+      "proof_photo_url",
+      "tag_code",
+      "qty",
+      "child_unit_qty",
+    ],
+  });
+
+  const {
+    warehousesOptions,
+    isLoading: isLoadingWarehouses,
+    isError: isErrorWarehouses,
+  } = useWarehouses();
+
+  const {
+    locationsOptions,
+    isLoading: isLoadingLocations,
+    isError: isErrorLocations,
+  } = useLocations(warehouseId);
+
+  const {
+    masterProduct,
+    isLoading: isLoadingMasterProducts,
+    isError: isErrorMasterProducts,
+  } = useMasterProducts();
+
+  const selectedWarehouse = warehousesOptions.find(
+    (warehouse) => warehouse.value === warehouseId,
+  );
+
+  const selectedLocations = locationsOptions.find(
+    (location) => location.value === locationId,
+  );
+
+  const selectedProduct = masterProduct.find(
+    (product) => product.id === masterProductId,
+  );
+
+  const isPackageMeasurement =
+    selectedProduct?.measurement === "box" ||
+    selectedProduct?.measurement === "pack";
+
+  const conditionLabel =
+    condition === "good" ? "Good" : condition === "damaged" ? "Damaged" : "-";
+
+  const isLloadingReferenceData =
+    isLoadingWarehouses || isLoadingLocations || isLoadingMasterProducts;
+
+  const hasReferenceDataError =
+    isErrorWarehouses || isErrorLocations || isErrorMasterProducts;
+
   return (
     <div className="space-y-8">
       <div>
@@ -19,85 +94,126 @@ export function ReviewStep({
         </p>
       </div>
 
+      {hasReferenceDataError && (
+        <div className="rounded-lg border border-destructive p-4">
+          <p className="text-sm text-destructive">
+            Failed to load some reference information.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-4">
         <ReviewSection title="Receiving Information">
           <ReviewItem
             label="Purchase Reference"
-            value="PO-2026-001"
+            value={purchaseReferenceNumber || "-"}
           />
 
           <ReviewItem
             label="Warehouse"
-            value="Main Warehouse"
+            value={selectedWarehouse?.label || "-"}
           />
 
           <ReviewItem
             label="Location / Zone"
-            value="Zone A"
+            value={selectedLocations?.label || "-"}
           />
         </ReviewSection>
 
         <ReviewSection title="Product">
           <ReviewItem
             label="Product"
-            value="Laptop Lenovo ThinkPad T14"
+            value={
+              isLoadingMasterProducts
+                ? "Loading..."
+                : (selectedProduct?.name ?? "-")
+            }
           />
 
           <ReviewItem
             label="Category"
-            value="Laptop"
+            value={
+              isLoadingMasterProducts
+                ? "Loading..."
+                : (selectedProduct?.category ?? "-")
+            }
           />
 
           <ReviewItem
             label="Brand"
-            value="Lenovo"
+            value={
+              isLoadingMasterProducts
+                ? "Loading..."
+                : (selectedProduct?.brand ?? "-")
+            }
           />
 
           <ReviewItem
             label="Measurement"
-            value="Pcs"
+            value={selectedProduct?.measurement? selectedProduct.measurement.charAt(0).toUpperCase() + selectedProduct.measurement.slice(1) : "-"}
           />
         </ReviewSection>
 
         <ReviewSection title="Initial Inspection">
+          <ReviewItem label="Initial Condition" value={conditionLabel} />
+
           <ReviewItem
-            label="Initial Condition"
-            value="Good"
+            label={condition === "damaged" ? "Damage Description" : "Notes"}
+            value={description || "—"}
           />
+
+          <div className="md:col-span-2">
+            <p className="text-xs text-muted-foreground">Proof Photo</p>
+
+            {proofPhotoUrl ? (
+              <div className="mt-2 overflow-hidden rounded-lg border border-border">
+                <img
+                  src={proofPhotoUrl}
+                  alt="Proof photo"
+                  className="max-h-56 w-full object-contain"
+                />
+              </div>
+            ) : (
+              <p className="mt-1 text-sm font-medium text-foreground">—</p>
+            )}
+          </div>
         </ReviewSection>
 
         <ReviewSection title="RFID">
-          <ReviewItem
-            label="Tag ID"
-            value="E28068940000501A"
-            mono
-          />
+          <ReviewItem label="Tag Code" value={tagCode || "-"} mono />
         </ReviewSection>
 
         <ReviewSection title="Item Information">
           <ReviewItem
             label="Quantity"
-            value="5"
+            value={typeof qty === "number" ? String(qty) : "-"}
           />
 
-          <ReviewItem
-            label="Rack / Storage Position"
-            value="Rack A-01"
-          />
+          {isPackageMeasurement && (
+            <ReviewItem
+              label="Child Unit Quantity"
+              value={
+                typeof childUnitQty === "number" ? String(childUnitQty) : "-"
+              }
+            />
+          )}
         </ReviewSection>
       </div>
 
       <div className="flex items-center justify-between border-t pt-6">
-        <Button
-          variant="outline"
-          onClick={onBack}
+        <Button 
+        variant="outline"
+        type="button" 
+        onClick={onBack}
         >
           Back
         </Button>
 
-        <Button>
-          Save Receiving
-        </Button>
+        <Button
+        type="button"
+        disabled={isLloadingReferenceData || hasReferenceDataError}
+        
+        >Save Receiving</Button>
       </div>
     </div>
   );
@@ -108,19 +224,12 @@ type ReviewSectionProps = {
   children: React.ReactNode;
 };
 
-function ReviewSection({
-  title,
-  children,
-}: ReviewSectionProps) {
+function ReviewSection({ title, children }: ReviewSectionProps) {
   return (
     <div className="rounded-xl border border-border p-5">
-      <h3 className="text-sm font-semibold text-foreground">
-        {title}
-      </h3>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {children}
-      </div>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">{children}</div>
     </div>
   );
 }
@@ -131,16 +240,10 @@ type ReviewItemProps = {
   mono?: boolean;
 };
 
-function ReviewItem({
-  label,
-  value,
-  mono = false,
-}: ReviewItemProps) {
+function ReviewItem({ label, value, mono = false }: ReviewItemProps) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
 
       <p
         className={[

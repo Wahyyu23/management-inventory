@@ -16,12 +16,37 @@ export const receivingFormSchema = z.object({
 
   description: z.string().trim().min(1, "Description is required."),
 
-  proof_photo_url: z.string().trim().min(1, "Proof photo is required.").url("Proof photo url is invalid."),
+  proof_photo_url: z
+    .string()
+    .trim()
+    .min(1, "Proof photo is required.")
+    .url("Proof photo url is invalid."),
 
-  tag_code: z.string().trim().min(1, "Tag code is required.").startsWith(
-    "PSI-",
-    "Tag code must start with PSI-"
-  ),
+  tag_code: z
+    .string()
+    .trim()
+    .min(1, "Tag code is required.")
+    .startsWith("PSI-", "Tag code must start with PSI-"),
+
+  qty: z
+    .number({
+      error: "Quantity is required.",
+    })
+    .int("Quantity must be a whole number.")
+    .positive("Quantity must be greater than 0."),
+
+     child_unit_qty: z
+      .number({
+        error:
+          "Child unit quantity must be a number.",
+      })
+      .int(
+        "Child unit quantity must be a whole number."
+      )
+      .positive(
+        "Child unit quantity must be greater than 0."
+      )
+      .optional(),
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;
