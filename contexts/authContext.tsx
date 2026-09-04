@@ -1,3 +1,4 @@
+"use client";
 import { LoginResult, User, UserRole } from "@/features/auth/types/auth.types";
 import {
   AuthSession,
@@ -40,10 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const startSession = useCallback((loginResult: LoginResult) => {
     saveAuthSession(loginResult);
     const storedSession = getAuthSession();
+    setSession(storedSession);
   }, []);
 
   const endSession = useCallback(() => {
     clearAuthSession();
+    setSession(null);
   }, []);
 
   const syncSession = useCallback(() => {

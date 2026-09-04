@@ -35,18 +35,13 @@ export const receivingFormSchema = z.object({
     .int("Quantity must be a whole number.")
     .positive("Quantity must be greater than 0."),
 
-     child_unit_qty: z
-      .number({
-        error:
-          "Child unit quantity must be a number.",
-      })
-      .int(
-        "Child unit quantity must be a whole number."
-      )
-      .positive(
-        "Child unit quantity must be greater than 0."
-      )
-      .optional(),
+  child_unit_qty: z
+    .number({
+      error: "Child unit quantity must be a number.",
+    })
+    .int("Child unit quantity must be a whole number.")
+    .positive("Child unit quantity must be greater than 0.")
+    .optional(),
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;

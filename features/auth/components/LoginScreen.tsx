@@ -16,12 +16,14 @@ import { loginSchema, type LoginFormValues } from "../schema/auth.schema";
 import { login } from "../services/auth.service";
 
 import type { LoginResult } from "../types/auth.types";
-import { saveAuthSession } from "../utils/auth-session";
+import { useAuth } from "@/contexts/authContext";
 
 export function LoginScreen() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [loginResult, setLoginResult] = useState<LoginResult | null>(null);
+
+  const { startSession } = useAuth();
 
   const {
     register,
@@ -49,12 +51,12 @@ export function LoginScreen() {
         password: values.password,
       });
 
-      saveAuthSession(response.data);
+      startSession(response.data);
 
       setLoginResult(response.data);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Login Failed");
-    } 
+    }
   }
 
   return (
