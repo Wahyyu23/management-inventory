@@ -24,7 +24,9 @@ export function AppHeader() {
           ) : user ? (
             <>
               <p className="text-sm text-muted-foreground">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{role}</p>
+              <p className="text-sm text-muted-foreground">
+                {role ? role.charAt(0).toUpperCase() + role.slice(1) : "-"}
+              </p>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Not Signed In..</p>
