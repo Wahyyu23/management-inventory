@@ -7,18 +7,18 @@ export type Permission =
   | "inventory.manage"
   | "borrowing.create"
   | "return.create"
-  | "users.image"
-  | "user.list"
-  | "user.manage"
+  | "users.manage"
+  | "users.list"
+  | "users.manage"
   | "activity.view"
-  | "report.view";
+  | "reports.view";
 
 const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   management: [
     "dashboard.view",
-    "user.list",
-    "user.manage",
-    "report.view",
+    "users.list",
+    "users.manage",
+    "reports.view",
     "activity.view",
   ],
   warehouse_admin: [
@@ -26,11 +26,23 @@ const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "receiving.create",
     "inventory.view",
     "inventory.manage",
-    "user.list",
+    "users.list",
     "activity.view",
   ],
   staff: ["dashboard.view", "borrowing.create", "return.create"],
   borrower: [],
+};
+
+export const PROTECTED_ROUTE_PERMISSIONS: Record<string, Permission> = {
+  "/dashboard": "dashboard.view",
+
+  "/receiving": "receiving.create",
+
+  "/inventory": "inventory.view",
+
+  "/borrowing": "borrowing.create",
+
+  "/return": "return.create",
 };
 
 export function hasPermission(
@@ -42,4 +54,17 @@ export function hasPermission(
   }
 
   return ROLE_PERMISSIONS[role].includes(permission);
+}
+
+export function canAccessRoute(
+  role: UserRole | null,
+  pathname: string,
+): boolean {
+  const requiredPermission = PROTECTED_ROUTE_PERMISSIONS[pathname];
+
+  if (!requiredPermission) {
+    return false;
+  }
+
+  return hasPermission(role, requiredPermission);
 }

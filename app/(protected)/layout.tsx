@@ -6,18 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/authContext";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import {
-  hasPermission,
-  Permission,
-} from "@/features/auth/config/authorization";
-
-const ROUTE_PERMISSION: Partial<Record<string, Permission>> = {
-  "/dashboard": "dashboard.view",
-  "/receiving": "receiving.create",
-  "/inventory": "inventory.view",
-  "/borrowing": "borrowing.create",
-  "/return": "return.create",
-};
+import { canAccessRoute } from "@/features/auth/config/authorization";
 
 export default function ProtectedLayout({
   children,
@@ -30,10 +19,8 @@ export default function ProtectedLayout({
 
   const pathname = usePathname();
 
-  const requiredPermission = ROUTE_PERMISSION[pathname];
-
   const canAccessCurrentRoute =
-    !requiredPermission || hasPermission(role, requiredPermission);
+    pathname === "/unauthorized" || canAccessRoute(role, pathname);
 
   useEffect(() => {
     if (isAuthReady && !isAuthenticated) {
