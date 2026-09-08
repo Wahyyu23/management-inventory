@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { supabase } from "@/lib/storage/supabase";
+import { useAuth } from "@/contexts/authContext";
+
 import { ReceivingStepper } from "./ReceivingStepper";
 import { ReceivingInfoStep } from "./steps/ReceivingInfoStep";
 import { ProductStep } from "./steps/ProductStep";
@@ -9,19 +14,37 @@ import { InspectionStep } from "./steps/InspectionStep";
 import { RfidStep } from "./steps/RfidStep";
 import { ItemInformationStep } from "./steps/ItemInformationStep";
 import { ReviewStep } from "./steps/ReviewStep";
+
 import {
   receivingFormSchema,
-  ReceivingFormValues,
+  type ReceivingFormValues,
 } from "../schema/receiving.schema";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
+import { createReceiving } from "../services/receiving.services";
+
+import type { ReceivingInput } from "../types/receiving.types";
 
 export function ReceivingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
+
   const [proofPhoto, setProofPhoto] = useState<File | null>(null);
-  //const [urlPhoto, setUrlPhoto] = useState<string | null>(null);
+
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   const [uploadPhotoError, setUploadPhotoError] = useState<string | null>(null);
+
+  const [isSavingReceiving, setIsSavingReceiving] = useState(false);
+
+  const [saveReceivingError, setSaveReceivingError] = useState<string | null>(
+    null,
+  );
+
+  const [savedTransactionId, setSavedTransactionId] = useState<string | null>(
+    null,
+  );
+
+  const { user } = useAuth();
+
   const form = useForm<ReceivingFormValues>({
     resolver: zodResolver(receivingFormSchema),
 
@@ -96,6 +119,50 @@ export function ReceivingWizard() {
     }
   }
 
+  async function handleSaveReceiving(values: ReceivingFormValues) {
+    setSaveReceivingError(null);
+    setSavedTransactionId(null);
+    if (!user) {
+      setSaveReceivingError("Authenticated user is not available.");
+
+      return;
+    }
+
+    const input: ReceivingInput = {
+      warehouse_id: values.warehouse_id,
+      location_id: values.location_id,
+      user_id: user.id,
+      purchase_reference_number: values.purchase_reference_number,
+      proof_photo_url: values.proof_photo_url,
+      tag_code: values.tag_code,
+      master_product_id: values.master_product_id,
+      qty: values.qty,
+      condition: values.condition,
+      description: values.description,
+      child_unit_qty: values.child_unit_qty,
+    };
+
+    setIsSavingReceiving(true);
+
+    try {
+      const response = await createReceiving(input);
+
+      setSavedTransactionId(response.data.id);
+    } catch (error) {
+      setSaveReceivingError(
+        error instanceof Error
+          ? error.message
+          : "Failed to save receiving transaction.",
+      );
+    } finally {
+      setIsSavingReceiving(false);
+    }
+  }
+
+  function handleSave() {
+    void form.handleSubmit(handleSaveReceiving)();
+  }
+
   return (
     <FormProvider {...form}>
       <div className="rounded-xl border border-border bg-card p-6">
@@ -107,6 +174,7 @@ export function ReceivingWizard() {
           {currentStep === 2 && (
             <ProductStep onBack={handleBack} onNext={handleNext} />
           )}
+
           {currentStep === 3 && (
             <InspectionStep
               onBack={handleBack}
@@ -118,13 +186,24 @@ export function ReceivingWizard() {
               uploadPhotoError={uploadPhotoError}
             />
           )}
+
           {currentStep === 4 && (
             <RfidStep onBack={handleBack} onNext={handleNext} />
           )}
+
           {currentStep === 5 && (
             <ItemInformationStep onBack={handleBack} onNext={handleNext} />
           )}
-          {currentStep === 6 && <ReviewStep onBack={handleBack} />}
+
+          {currentStep === 6 && (
+            <ReviewStep
+              onBack={handleBack}
+              onSave={handleSave}
+              isSaving={isSavingReceiving}
+              saveError={saveReceivingError}
+              savedTransactionId={savedTransactionId}
+            />
+          )}
         </div>
       </div>
     </FormProvider>

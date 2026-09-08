@@ -4,6 +4,8 @@ import {
   MasterProductCreateResponse,
   MasterProductInput,
   MasterProductListResponse,
+  ReceivingInput,
+  ReceivingTransactionResponse,
   WarehouseListResponse,
 } from "../types/receiving.types";
 
@@ -45,6 +47,13 @@ export async function getMasterProducts(
 
 export async function createMasterProduct(input: MasterProductInput) {
   return apiClient<MasterProductCreateResponse>("/master-products", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function createReceiving(input: ReceivingInput) {
+  return apiClient<ReceivingTransactionResponse>("/transactions/receiving", {
     method: "POST",
     body: input,
   });

@@ -7,9 +7,19 @@ import { useMasterProducts } from "../../hooks/useMasterProduct";
 
 type ReviewStepProps = {
   onBack: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+  saveError: string | null;
+  savedTransactionId: string | null;
 };
 
-export function ReviewStep({ onBack }: ReviewStepProps) {
+export function ReviewStep({ 
+  onBack,
+  onSave,
+  isSaving,
+  saveError,
+  savedTransactionId
+}: ReviewStepProps) {
   const { control } = useFormContext<ReceivingFormValues>();
 
   const [
@@ -76,11 +86,13 @@ export function ReviewStep({ onBack }: ReviewStepProps) {
   const conditionLabel =
     condition === "good" ? "Good" : condition === "damaged" ? "Damaged" : "-";
 
-  const isLloadingReferenceData =
+  const isLoadingReferenceData =
     isLoadingWarehouses || isLoadingLocations || isLoadingMasterProducts;
 
   const hasReferenceDataError =
     isErrorWarehouses || isErrorLocations || isErrorMasterProducts;
+
+  const hasBeenSaved = savedTransactionId !== null;
 
   return (
     <div className="space-y-8">
@@ -99,6 +111,12 @@ export function ReviewStep({ onBack }: ReviewStepProps) {
           <p className="text-sm text-destructive">
             Failed to load some reference information.
           </p>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="rounded-lg border border-destructive p-4">
+          <p className="text-sm text-destructive">{saveError}</p>
         </div>
       )}
 
@@ -150,7 +168,12 @@ export function ReviewStep({ onBack }: ReviewStepProps) {
 
           <ReviewItem
             label="Measurement"
-            value={selectedProduct?.measurement? selectedProduct.measurement.charAt(0).toUpperCase() + selectedProduct.measurement.slice(1) : "-"}
+            value={
+              selectedProduct?.measurement
+                ? selectedProduct.measurement.charAt(0).toUpperCase() +
+                  selectedProduct.measurement.slice(1)
+                : "-"
+            }
           />
         </ReviewSection>
 
@@ -201,19 +224,22 @@ export function ReviewStep({ onBack }: ReviewStepProps) {
       </div>
 
       <div className="flex items-center justify-between border-t pt-6">
-        <Button 
-        variant="outline"
-        type="button" 
-        onClick={onBack}
-        >
+        <Button variant="outline" type="button" onClick={onBack}>
           Back
         </Button>
 
         <Button
-        type="button"
-        disabled={isLloadingReferenceData || hasReferenceDataError}
-        
-        >Save Receiving</Button>
+          type="button"
+          onClick={onSave}
+          disabled={
+            isLoadingReferenceData ||
+            hasReferenceDataError ||
+            isSaving ||
+            hasBeenSaved
+          }
+        >
+          {isSaving ? "Saving..." : hasBeenSaved ? "Saved" : "Save Receiving"}
+        </Button>
       </div>
     </div>
   );
