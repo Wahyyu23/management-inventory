@@ -2,20 +2,20 @@ import useSWR from "swr";
 import { getWarehouses } from "../services/receiving.services";
 import { mapWarehousesToOptions } from "../mappers/receiving.mapper";
 
-export function useWarehouses(page = 1, limit = 20) {
+export function useWarehouses() {
   const { data, error, isLoading, isValidating, mutate } = useSWR(
-    ["warehouses", page, limit],
-    () => getWarehouses(page, limit),
+    ["warehouses"],
+    () => getWarehouses(),
   );
 
-  const warehousesOptions = mapWarehousesToOptions(
-    data?.data ?? []
-  );
+  const warehouses = data?.data ?? [];
+
+  const warehousesOptions = mapWarehousesToOptions(warehouses);
 
   return {
+    warehouses,
     warehousesOptions,
     meta: data?.meta ?? null,
-
     isLoading,
     isValidating,
     isError: Boolean(error),
