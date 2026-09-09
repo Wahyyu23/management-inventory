@@ -5,10 +5,20 @@ import {
   updateAccessToken,
 } from "@/features/auth/utils/auth-session";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+  ?.trim()
+  .replace(/\/+$/, "");
 
-if (!API_BASE_URL) {
-  throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+const API_MOCK = process.env.NEXT_PUBLIC_API_MOCK
+  ?.trim()
+  .replace(/\/+$/, "");
+
+const DEFAULT_API_URL = API_BASE_URL || API_MOCK;
+
+if (!DEFAULT_API_URL) {
+  throw new Error(
+    "Define NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_MOCK",
+  );
 }
 
 type QueryParams = Record<string, string | number | boolean | null | undefined>;
@@ -17,6 +27,7 @@ type ApiClientOptions = Omit<RequestInit, "body" | "headers"> & {
   params?: QueryParams;
   body?: unknown;
   headers?: Record<string, string>;
+  fallbackToMock?: boolean;
 };
 
 type RefreshTokenResponse = {
@@ -33,12 +44,15 @@ type RefreshTokenResponse = {
   };
 };
 
+const MOCK_FALLBACK_STATUSES = new Set([500, 503, 504]);
+
 let refreshPromise: Promise<string> | null = null;
 
 function redirectToLogin() {
   if (typeof window === "undefined") {
     return;
   }
+
   window.location.replace("/login");
 }
 
@@ -52,17 +66,14 @@ async function performTokenRefresh(): Promise<string> {
 
   if (!refreshToken) {
     endInvalidSession();
-
     throw new Error("Refresh token is not available");
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+  const response = await fetch(`${DEFAULT_API_URL}/auth/refresh`, {
     method: "POST",
-
     headers: {
       "Content-Type": "application/json",
     },
-
     body: JSON.stringify({
       refresh_token: refreshToken,
     }),
@@ -74,19 +85,16 @@ async function performTokenRefresh(): Promise<string> {
 
   if (response.status === 501) {
     endInvalidSession();
-
-    const message =
-      data?.error?.message ?? "Refresh token is invalid or expired";
-
-    throw new Error(message);
+    throw new Error(
+      data?.error?.message ?? "Refresh token is invalid or expired",
+    );
   }
 
   if (!response.ok) {
-    const message =
+    throw new Error(
       data?.error?.message ??
-      `Token refresh failed with status ${response.status}`;
-
-    throw new Error(message);
+        `Token refresh failed with status ${response.status}`,
+    );
   }
 
   if (!data?.data?.access_token) {
@@ -119,68 +127,118 @@ export async function apiClient<T>(
   endpoint: string,
   options: ApiClientOptions = {},
 ): Promise<T> {
-  const { params, body, headers, ...requestOptions } = options;
+  const { params, body, headers, fallbackToMock, ...requestOptions } = options;
+  const method = (requestOptions.method ?? "GET").toUpperCase();
 
   const normalizedEndpoint = endpoint.startsWith("/")
     ? endpoint
     : `/${endpoint}`;
 
-  const url = new URL(`${API_BASE_URL}${normalizedEndpoint}`);
+  const endpointPath = normalizedEndpoint.split(/[?#]/)[0].replace(/\/+$/, "");
+  const isAuthEndpoint =
+    endpointPath === "/auth" || endpointPath.startsWith("/auth/");
 
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value));
-      }
-    });
+  const allowFallback =
+    !isAuthEndpoint &&
+    (fallbackToMock ?? (method === "GET" || method === "HEAD"));
+
+  let usingMock = !API_BASE_URL;
+  const requestBody = body !== undefined ? JSON.stringify(body) : undefined;
+
+  function canUseMock() {
+    return (
+      allowFallback &&
+      !usingMock &&
+      Boolean(API_MOCK) &&
+      API_MOCK !== API_BASE_URL &&
+      !requestOptions.signal?.aborted
+    );
   }
 
-  async function executeRequest() {
-    const accessToken = getAccessToken();
+  async function executeRequest(baseUrl: string, isMock: boolean) {
+    const url = new URL(`${baseUrl}${normalizedEndpoint}`);
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.append(key, String(value));
+        }
+      });
+    }
+
+    const requestHeaders = new Headers(headers);
+
+    if (body !== undefined && !requestHeaders.has("Content-Type")) {
+      requestHeaders.set("Content-Type", "application/json");
+    }
+
+    if (isMock) {
+      requestHeaders.delete("Authorization");
+      requestHeaders.delete("Cookie");
+    } else {
+      const accessToken = getAccessToken();
+
+      if (accessToken && !requestHeaders.has("Authorization")) {
+        requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+      }
+    }
 
     return fetch(url.toString(), {
       ...requestOptions,
-
-      headers: {
-        ...(body !== undefined
-          ? {
-              "Content-Type": "application/json",
-            }
-          : {}),
-
-        ...(accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {}),
-
-        ...headers,
-      },
-
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      method,
+      credentials: isMock ? "omit" : requestOptions.credentials,
+      headers: requestHeaders,
+      body: requestBody,
     });
   }
 
-  let response = await executeRequest();
+  async function executeMockRequest() {
+    if (!API_MOCK) {
+      throw new Error("NEXT_PUBLIC_API_MOCK is not defined");
+    }
+
+    usingMock = true;
+    console.warn("[apiClient] API utama gagal; menggunakan API mock.");
+    return executeRequest(API_MOCK, true);
+  }
+
+  async function executeWithNetworkFallback() {
+    const baseUrl = usingMock ? API_MOCK! : API_BASE_URL!;
+
+    try {
+      return await executeRequest(baseUrl, usingMock);
+    } catch (error) {
+      if (!(error instanceof TypeError) || !canUseMock()) {
+        throw error;
+      }
+
+      return executeMockRequest();
+    }
+  }
+
+  let response = await executeWithNetworkFallback();
 
   const canRefresh =
-    normalizedEndpoint !== "/auth/refresh" &&
-    normalizedEndpoint !== "/auth/login";
+    !usingMock &&
+    endpointPath !== "/auth/refresh" &&
+    endpointPath !== "/auth/login";
 
   if (response.status === 502 && canRefresh) {
     await refreshAccessToken();
+    response = await executeWithNetworkFallback();
+  }
 
-    response = await executeRequest();
+  if (MOCK_FALLBACK_STATUSES.has(response.status) && canUseMock()) {
+    response = await executeMockRequest();
   }
 
   const data = await parseResponse(response);
 
   if (!response.ok) {
-    const message =
+    throw new Error(
       data?.error?.message ??
-      `API request failed with status ${response.status}`;
-
-    throw new Error(message);
+        `API request failed with status ${response.status}`,
+    );
   }
 
   return data as T;
