@@ -1,11 +1,19 @@
 import { apiClient } from "@/lib/api/client";
 
 import {
-  LocationApiResponse, 
+  LocationApiResponse,
   LocationListResponse,
+  MasterProduct,
+  MasterProductApiCategory,
+  MasterProductApiInput,
+  MasterProductApiItem,
+  MasterProductApiMeasurement,
+  MasterProductApiResponse,
+  MasterProductCategory,
   MasterProductCreateResponse,
   MasterProductInput,
   MasterProductListResponse,
+  MasterProductMeasurement,
   ReceivingInput,
   ReceivingTransactionResponse,
   WarehouseApiResponse,
@@ -13,58 +21,35 @@ import {
 } from "../types/receiving.types";
 
 export async function getWarehouses(): Promise<WarehouseListResponse> {
-  const response =
-    await apiClient<WarehouseApiResponse>(
-      "/warehouses",
-      {
-        method: "GET",
-      },
-    );
+  const response = await apiClient<WarehouseApiResponse>("/warehouses", {
+    method: "GET",
+  });
 
-  const warehouses = response.map(
-    (warehouse) => ({
-      id: warehouse.id.value,
-
-      name: warehouse.name,
-
-      addressSite:
-        warehouse.addressSite,
-
-      isActive:
-        warehouse.isActive,
-    }),
-  );
+  const warehouses = response.map((warehouse) => ({
+    id: warehouse.id.value,
+    name: warehouse.name,
+    addressSite: warehouse.addressSite,
+    isActive: warehouse.isActive,
+  }));
 
   return {
     success: true,
     data: warehouses,
     meta: null,
   };
-};
+}
 
 export async function getLocations(): Promise<LocationListResponse> {
-  const response =
-    await apiClient<LocationApiResponse>(
-      "/locations",
-      {
-        method: "GET",
-      },
-    );
+  const response = await apiClient<LocationApiResponse>("/locations", {
+    method: "GET",
+  });
 
-
-  const locations = response.map(
-    (location) => ({
-      id: location.id.value,
-
-      warehouse_id:
-        location.warehouseId.value,
-
-      zone: location.zone,
-
-      isActive:
-        location.isActive,
-    }),
-  );
+  const locations = response.map((location) => ({
+    id: location.id.value,
+    warehouse_id: location.warehouseId.value,
+    zone: location.zone,
+    isActive: location.isActive,
+  }));
 
   return {
     success: true,
@@ -72,47 +57,143 @@ export async function getLocations(): Promise<LocationListResponse> {
   };
 }
 
-export async function getMasterProducts(
-  page? : 1,
-  limit? : 20,
-  name?: string,
-  category?: string, 
-) {
-  return apiClient<MasterProductListResponse>(
+const MASTER_PRODUCT_CATEGORY_TO_API: Partial<
+  Record<MasterProductCategory, MasterProductApiCategory>
+> = {
+  "Electrical Component": "ELECTRICAL_COMPONENT",
+
+  "Mechanical Component": "MECHANICAL_COMPONENT",
+
+  "IT Component": "IT_COMPONENT",
+
+  "Administration Component": "ADMINISTRATION_COMPONENT",
+
+  Other: "OTHER",
+};
+
+const MASTER_PRODUCT_CATEGORY_FROM_API: Record<
+  MasterProductApiCategory,
+  MasterProductCategory
+> = {
+  ELECTRICAL_COMPONENT: "Electrical Component",
+
+  MECHANICAL_COMPONENT: "Mechanical Component",
+
+  IT_COMPONENT: "IT Component",
+
+  ADMINISTRATION_COMPONENT: "Administration Component",
+
+  OTHER: "Other",
+};
+
+const MASTER_PRODUCT_MEASUREMENT_FROM_API: Record<
+  MasterProductApiMeasurement,
+  MasterProductMeasurement
+> = {
+  UNIT: "unit",
+  SET: "set",
+  BOX: "box",
+  PACK: "pack",
+  KG: "kg",
+  METER: "meter",
+  LITER: "liter",
+};
+
+function mapMasterProductFromApi(product: MasterProductApiItem): MasterProduct {
+  const measurement = MASTER_PRODUCT_MEASUREMENT_FROM_API[product.measurement];
+
+  return {
+    id: product.id.value,
+
+    name: product.name,
+
+    category: MASTER_PRODUCT_CATEGORY_FROM_API[product.category],
+
+    measurement,
+
+    brand: product.brand,
+
+    description: product.description ?? undefined,
+  };
+}
+
+function mapMasterProductInputToApi(
+  input: MasterProductInput,
+): MasterProductApiInput {
+  const apiCategory = MASTER_PRODUCT_CATEGORY_TO_API[input.category];
+
+  if (!apiCategory) {
+    throw new Error(
+      `Category "${input.category}" is not supported by the current backend.`,
+    );
+  }
+
+  return {
+    name: input.name,
+    category: apiCategory,
+    measurement: input.measurement.toUpperCase() as MasterProductApiMeasurement,
+    brand: input.brand,
+    description: input.description,
+  };
+}
+
+export async function getMasterProducts(): Promise<MasterProductListResponse> {
+  const response = await apiClient<MasterProductApiResponse>(
     "/master-products",
     {
       method: "GET",
-
-      params: {
-        name,
-        category,
-        page,
-        limit,
-      },
     },
   );
+
+  if (!Array.isArray(response)) {
+    throw new Error("Invalid master products response: expected an array.");
+  }
+
+  const masterProducts = response.map(mapMasterProductFromApi);
+
+  return {
+    success: true,
+    data: masterProducts,
+    meta: null,
+  };
 }
 
 export async function createMasterProduct(
   input: MasterProductInput,
-) {
-  return apiClient<MasterProductCreateResponse>(
-    "/master-products",
-    {
-      method: "POST",
-      body: input,
-    },
+): Promise<MasterProductCreateResponse> {
+  const apiInput = mapMasterProductInputToApi(input);
+
+  await apiClient<null>("/master-products", {
+    method: "POST",
+    body: apiInput,
+  });
+
+  const refreshed = await getMasterProducts();
+
+  const createdProduct = refreshed.data.find(
+    (product) =>
+      product.name === input.name &&
+      product.category === input.category &&
+      product.measurement === input.measurement &&
+      product.brand === input.brand &&
+      (product.description ?? "") === (input.description ?? ""),
   );
+
+  if (!createdProduct) {
+    throw new Error(
+      "Master product was created, but it could not be found after refreshing the product list.",
+    );
+  }
+
+  return {
+    success: true,
+    data: createdProduct,
+  };
 }
 
-export async function createReceiving(
-  input: ReceivingInput,
-) {
-  return apiClient<ReceivingTransactionResponse>(
-    "/transactions/receiving",
-    {
-      method: "POST",
-      body: input,
-    },
-  );
+export async function createReceiving(input: ReceivingInput) {
+  return apiClient<ReceivingTransactionResponse>("/transactions/receiving", {
+    method: "POST",
+    body: input,
+  });
 }

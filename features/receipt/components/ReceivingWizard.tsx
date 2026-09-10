@@ -99,7 +99,9 @@ export function ReceivingWizard() {
         throw error;
       }
 
-      const { data } = supabase.storage.from("management-inventory-photo").getPublicUrl(filename);
+      const { data } = supabase.storage
+        .from("management-inventory-photo")
+        .getPublicUrl(filename);
 
       form.setValue("proof_photo_url", data.publicUrl, {
         shouldDirty: true,
@@ -188,11 +190,10 @@ export function ReceivingWizard() {
           )}
 
           {currentStep === 4 && (
-            <RfidStep onBack={handleBack} onNext={handleNext} />
-          )}
-
-          {currentStep === 5 && (
             <ItemInformationStep onBack={handleBack} onNext={handleNext} />
+          )}
+          {currentStep === 5 && (
+            <RfidStep onBack={handleBack} onNext={handleNext} />
           )}
 
           {currentStep === 6 && (

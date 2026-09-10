@@ -2,8 +2,8 @@ const steps = [
   "Receiving Information",
   "Product",
   "Inspection",
-  "RFID Tagging",
   "Item Info",
+  "RFID Tagging",
   "Review",
 ];
 

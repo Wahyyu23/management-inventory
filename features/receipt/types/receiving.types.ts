@@ -65,7 +65,9 @@ export type SelectOption = {
   value: string;
 };
 
-export type MasterProductCategory = (typeof MASTER_PRODUCT_CATEGORIES)[number];
+
+export type MasterProductCategory =
+  (typeof MASTER_PRODUCT_CATEGORIES)[number];
 
 export type MasterProductMeasurement =
   (typeof MASTER_PRODUCT_MEASUREMENT)[number];
@@ -87,6 +89,7 @@ export type MasterProduct = {
   description?: string;
 };
 
+
 export type MasterProductApiCategory =
   | "OTHER"
   | "IT_COMPONENT"
@@ -94,7 +97,8 @@ export type MasterProductApiCategory =
   | "MECHANICAL_COMPONENT"
   | "ELECTRICAL_COMPONENT";
 
-export type MasterProductApiMeasurement = Uppercase<MasterProductMeasurement>;
+export type MasterProductApiMeasurement =
+  Uppercase<MasterProductMeasurement>;
 
 export type MasterProductApiItem = {
   name: string;
@@ -107,9 +111,16 @@ export type MasterProductApiItem = {
   taggedUnits: unknown[];
 };
 
-export type MasterProductApiResponse = MasterProductApiItem[];
+export type MasterProductApiResponse =
+  MasterProductApiItem[];
 
-export type MasterProductApiInput = MasterProductInput;
+export type MasterProductApiInput = {
+  name: string;
+  category: MasterProductApiCategory;
+  measurement: MasterProductApiMeasurement;
+  brand: string;
+  description?: string;
+};
 
 export type MasterProductListResponse = {
   success: boolean;
@@ -147,7 +158,11 @@ export type ReceivingTransaction = {
   initial_condition: "GOOD" | "DAMAGED";
   proof_photo_url: string;
   received_by: string;
-  resulting_status: "newly_registered" | "in_warehouse" | "in_use" | "borrowed";
+  resulting_status:
+    | "newly_registered"
+    | "in_warehouse"
+    | "in_use"
+    | "borrowed";
   created_at: string;
 };
 

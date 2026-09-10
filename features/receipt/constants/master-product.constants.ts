@@ -1,35 +1,44 @@
 export const MASTER_PRODUCT_CATEGORIES = [
-  "ELECTRICAL_COMPONENT",
-  "MECHANICAL_COMPONENT",
-  "IT_COMPONENT",
-  "ADMINISTRATION_COMPONENT",
-  "ELECTRICAL_TOOLS",
-  "MECHANICAL_TOOLS",
-  "IT_TOOLS",
-  "ADMINISTRATION_TOOLS(path)$0",
-  "OTHER",
+  "Electrical Component",
+  "Mechanical Component",
+  "IT Component",
+  "Administration Component",
+  "Electrical Tools",
+  "Mechanical Tools",
+  "IT Tools",
+  "Administration Tools(path)$0",
+  "Other",
 ] as const;
 
 export const MASTER_PRODUCT_MEASUREMENT = [
-  "UNIT",
-  "SET",
-  "BOX",
-  "PACK",
-  "KG",
-  "METER",
-  "LITER",
+  "unit",
+  "set",
+  "box",
+  "pack",
+  "kg",
+  "meter",
+  "liter",
 ] as const;
 
 export const MASTER_PRODUCT_CATEGORY_OPTIONS = MASTER_PRODUCT_CATEGORIES.map(
   (value) => ({
     value,
     label:
-      value === "ADMINISTRATION_TOOLS(path)$0" ? "Administration Tools" : value,
+      value === "Administration Tools(path)$0" ? "Administration Tools" : value,
   }),
 );
 
 export const MASTER_PRODUCT_MEASUREMENT_OPTIONS =
-  MASTER_PRODUCT_MEASUREMENT.map((value) => ({
-    value,
-    label: value,
-  }));
+  MASTER_PRODUCT_MEASUREMENT.map(
+    (value) => ({
+      value,
+
+      label:
+        value === "kg"
+          ? "Kg"
+          : value
+              .charAt(0)
+              .toUpperCase() +
+            value.slice(1),
+    }),
+  );
