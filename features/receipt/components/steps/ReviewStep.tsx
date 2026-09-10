@@ -80,8 +80,8 @@ export function ReviewStep({
   );
 
   const isPackageMeasurement =
-    selectedProduct?.measurement === "box" ||
-    selectedProduct?.measurement === "pack";
+    selectedProduct?.measurement === "BOX" ||
+    selectedProduct?.measurement === "PACK";
 
   const conditionLabel =
     condition === "good" ? "Good" : condition === "damaged" ? "Damaged" : "-";

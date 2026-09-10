@@ -8,37 +8,19 @@ import type {
   MasterProductListResponse,
 } from "../types/receiving.types";
 
-export function useMasterProducts(
-  page = 1,
-  limit = 20
-) {
-  const {
-    data,
-    error,
-    isLoading,
-    isValidating,
-    mutate,
-  } = useSWR(
-    ["master-products", page, limit],
-    () => getMasterProducts(page, limit)
+export function useMasterProducts() {
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    ["master-products"],
+    getMasterProducts,
   );
 
   const masterProduct = data?.data ?? [];
 
-  const masterProductsOptions =
-    mapMasterProductsToOptions(
-      masterProduct
-    );
+  const masterProductsOptions = mapMasterProductsToOptions(masterProduct);
 
-  async function addMasterProductToCache(
-    product: MasterProduct
-  ) {
+  async function addMasterProductToCache(product: MasterProduct) {
     await mutate(
-      (
-        current:
-          | MasterProductListResponse
-          | undefined
-      ) => {
+      (current: MasterProductListResponse | undefined) => {
         if (!current) {
           return {
             success: true,
@@ -47,41 +29,33 @@ export function useMasterProducts(
           };
         }
 
-        const alreadyExists =
-          current.data.some(
-            (item) => item.id === product.id
-          );
+        const alreadyExists = current.data.some(
+          (item) => item.id === product.id,
+        );
 
         if (alreadyExists) {
           return current;
         }
 
-        const totalItems =
-          (current.meta?.total_items ?? 0) + 1;
+        const totalItems = (current.meta?.total_items ?? 0) + 1;
 
         return {
           ...current,
 
-          data: [
-            ...current.data,
-            product,
-          ],
+          data: [...current.data, product],
 
           meta: current.meta
             ? {
                 ...current.meta,
                 total_items: totalItems,
-                total_pages: Math.ceil(
-                  totalItems /
-                    current.meta.limit
-                ),
+                total_pages: Math.ceil(totalItems / current.meta.limit),
               }
             : null,
         };
       },
       {
         revalidate: false,
-      }
+      },
     );
   }
 

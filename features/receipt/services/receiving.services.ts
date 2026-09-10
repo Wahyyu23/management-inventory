@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 
 import {
-  LocationApiResponse, // [ADDED]
+  LocationApiResponse, 
   LocationListResponse,
   MasterProductCreateResponse,
   MasterProductInput,
@@ -73,10 +73,10 @@ export async function getLocations(): Promise<LocationListResponse> {
 }
 
 export async function getMasterProducts(
-  page = 1,
-  limit = 20,
+  page? : 1,
+  limit? : 20,
   name?: string,
-  category?: string,
+  category?: string, 
 ) {
   return apiClient<MasterProductListResponse>(
     "/master-products",

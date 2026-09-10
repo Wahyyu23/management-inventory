@@ -92,14 +92,14 @@ export function ReceivingWizard() {
       const filename = `${Date.now()}-${file.name}`;
 
       const { error } = await supabase.storage
-        .from("photos")
+        .from("management-inventory-photo")
         .upload(filename, file);
 
       if (error) {
         throw error;
       }
 
-      const { data } = supabase.storage.from("photos").getPublicUrl(filename);
+      const { data } = supabase.storage.from("management-inventory-photo").getPublicUrl(filename);
 
       form.setValue("proof_photo_url", data.publicUrl, {
         shouldDirty: true,

@@ -3,9 +3,7 @@ import {
   MASTER_PRODUCT_MEASUREMENT,
 } from "../constants/master-product.constants";
 
-export type WarehousesStatus =
-  | "active"
-  | "inactive";
+export type WarehousesStatus = "active" | "inactive";
 
 export type ApiIdentifier = {
   value: string;
@@ -18,8 +16,7 @@ export type LocationApiItem = {
   zone: string;
 };
 
-export type LocationApiResponse =
-  LocationApiItem[];
+export type LocationApiResponse = LocationApiItem[];
 
 export type WarehouseApiItem = {
   name: string;
@@ -29,8 +26,7 @@ export type WarehouseApiItem = {
   locations: LocationApiItem[];
 };
 
-export type WarehouseApiResponse =
-  WarehouseApiItem[];
+export type WarehouseApiResponse = WarehouseApiItem[];
 
 export type Location = {
   id: string;
@@ -69,8 +65,7 @@ export type SelectOption = {
   value: string;
 };
 
-export type MasterProductCategory =
-  (typeof MASTER_PRODUCT_CATEGORIES)[number];
+export type MasterProductCategory = (typeof MASTER_PRODUCT_CATEGORIES)[number];
 
 export type MasterProductMeasurement =
   (typeof MASTER_PRODUCT_MEASUREMENT)[number];
@@ -91,6 +86,30 @@ export type MasterProduct = {
   brand: string;
   description?: string;
 };
+
+export type MasterProductApiCategory =
+  | "OTHER"
+  | "IT_COMPONENT"
+  | "ADMINISTRATION_COMPONENT"
+  | "MECHANICAL_COMPONENT"
+  | "ELECTRICAL_COMPONENT";
+
+export type MasterProductApiMeasurement = Uppercase<MasterProductMeasurement>;
+
+export type MasterProductApiItem = {
+  name: string;
+  category: MasterProductApiCategory;
+  measurement: MasterProductApiMeasurement;
+  brand: string;
+  description?: string | null;
+  id: ApiIdentifier;
+  isActive: boolean;
+  taggedUnits: unknown[];
+};
+
+export type MasterProductApiResponse = MasterProductApiItem[];
+
+export type MasterProductApiInput = MasterProductInput;
 
 export type MasterProductListResponse = {
   success: boolean;
@@ -125,16 +144,10 @@ export type ReceivingTransaction = {
   tag_id: string;
   master_product_id: string;
   qty: number;
-  initial_condition:
-    | "GOOD"
-    | "DAMAGED";
+  initial_condition: "GOOD" | "DAMAGED";
   proof_photo_url: string;
   received_by: string;
-  resulting_status:
-    | "newly_registered"
-    | "in_warehouse"
-    | "in_use"
-    | "borrowed";
+  resulting_status: "newly_registered" | "in_warehouse" | "in_use" | "borrowed";
   created_at: string;
 };
 
