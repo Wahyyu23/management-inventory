@@ -9,6 +9,18 @@ export type ApiIdentifier = {
   value: string;
 };
 
+export type PaginationMeta = {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
+};
+
+export type ApiListResponse<T> = {
+  data: T[];
+  meta: PaginationMeta;
+};
+
 export type LocationApiItem = {
   id: ApiIdentifier;
   isActive: boolean;
@@ -16,7 +28,7 @@ export type LocationApiItem = {
   zone: string;
 };
 
-export type LocationApiResponse = LocationApiItem[];
+export type LocationApiResponse = ApiListResponse<LocationApiItem>;
 
 export type WarehouseApiItem = {
   name: string;
@@ -26,7 +38,7 @@ export type WarehouseApiItem = {
   locations: LocationApiItem[];
 };
 
-export type WarehouseApiResponse = WarehouseApiItem[];
+export type WarehouseApiResponse = ApiListResponse<WarehouseApiItem>;
 
 export type Location = {
   id: string;
@@ -42,22 +54,16 @@ export type Warehouse = {
   isActive: boolean;
 };
 
-export type PaginationMeta = {
-  page: number;
-  limit: number;
-  total_pages: number;
-  total_items: number;
-};
-
 export type WarehouseListResponse = {
   success: boolean;
   data: Warehouse[];
-  meta: PaginationMeta | null;
+  meta: PaginationMeta;
 };
 
 export type LocationListResponse = {
   success: boolean;
   data: Location[];
+  meta: PaginationMeta;
 };
 
 export type SelectOption = {
@@ -65,9 +71,7 @@ export type SelectOption = {
   value: string;
 };
 
-
-export type MasterProductCategory =
-  (typeof MASTER_PRODUCT_CATEGORIES)[number];
+export type MasterProductCategory = (typeof MASTER_PRODUCT_CATEGORIES)[number];
 
 export type MasterProductMeasurement =
   (typeof MASTER_PRODUCT_MEASUREMENT)[number];
@@ -89,7 +93,6 @@ export type MasterProduct = {
   description?: string;
 };
 
-
 export type MasterProductApiCategory =
   | "OTHER"
   | "IT_COMPONENT"
@@ -97,8 +100,7 @@ export type MasterProductApiCategory =
   | "MECHANICAL_COMPONENT"
   | "ELECTRICAL_COMPONENT";
 
-export type MasterProductApiMeasurement =
-  Uppercase<MasterProductMeasurement>;
+export type MasterProductApiMeasurement = Uppercase<MasterProductMeasurement>;
 
 export type MasterProductApiItem = {
   name: string;
@@ -106,13 +108,15 @@ export type MasterProductApiItem = {
   measurement: MasterProductApiMeasurement;
   brand: string;
   description?: string | null;
+
   id: ApiIdentifier;
+
   isActive: boolean;
+
   taggedUnits: unknown[];
 };
 
-export type MasterProductApiResponse =
-  MasterProductApiItem[];
+export type MasterProductApiResponse = ApiListResponse<MasterProductApiItem>;
 
 export type MasterProductApiInput = {
   name: string;
@@ -125,7 +129,7 @@ export type MasterProductApiInput = {
 export type MasterProductListResponse = {
   success: boolean;
   data: MasterProduct[];
-  meta: PaginationMeta | null;
+  meta: PaginationMeta;
 };
 
 export type MasterProductCreateResponse = {
@@ -155,14 +159,15 @@ export type ReceivingTransaction = {
   tag_id: string;
   master_product_id: string;
   qty: number;
+
   initial_condition: "GOOD" | "DAMAGED";
+
   proof_photo_url: string;
+
   received_by: string;
-  resulting_status:
-    | "newly_registered"
-    | "in_warehouse"
-    | "in_use"
-    | "borrowed";
+
+  resulting_status: "newly_registered" | "in_warehouse" | "in_use" | "borrowed";
+
   created_at: string;
 };
 
