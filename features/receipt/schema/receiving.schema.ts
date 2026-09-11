@@ -42,6 +42,9 @@ export const receivingFormSchema = z.object({
     .int("Child unit quantity must be a whole number.")
     .positive("Child unit quantity must be greater than 0.")
     .optional(),
+
+  tagged_unit_id: z.string().trim().min(1, "Tagged unit must be registered."),
+
 });
 
 export type ReceivingFormValues = z.infer<typeof receivingFormSchema>;

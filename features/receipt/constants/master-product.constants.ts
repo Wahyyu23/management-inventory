@@ -29,16 +29,8 @@ export const MASTER_PRODUCT_CATEGORY_OPTIONS = MASTER_PRODUCT_CATEGORIES.map(
 );
 
 export const MASTER_PRODUCT_MEASUREMENT_OPTIONS =
-  MASTER_PRODUCT_MEASUREMENT.map(
-    (value) => ({
-      value,
-
-      label:
-        value === "kg"
-          ? "Kg"
-          : value
-              .charAt(0)
-              .toUpperCase() +
-            value.slice(1),
-    }),
-  );
+  MASTER_PRODUCT_MEASUREMENT.map((value) => ({
+    value,
+    label:
+      value === "kg" ? "Kg" : value.charAt(0).toUpperCase() + value.slice(1),
+  }));

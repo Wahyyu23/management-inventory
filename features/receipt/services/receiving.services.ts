@@ -3,7 +3,6 @@ import { apiClient } from "@/lib/api/client";
 import type {
   LocationApiResponse,
   LocationListResponse,
-
   MasterProduct,
   MasterProductApiCategory,
   MasterProductApiInput,
@@ -15,133 +14,89 @@ import type {
   MasterProductInput,
   MasterProductListResponse,
   MasterProductMeasurement,
-
   ReceivingInput,
   ReceivingTransactionResponse,
-
+  TaggedUnit,
+  TaggedUnitApiInput,
+  TaggedUnitApiResponse,
+  TaggedUnitProductApiItem,
   WarehouseApiResponse,
   WarehouseListResponse,
 } from "../types/receiving.types";
 
-export async function getWarehouses():
-  Promise<WarehouseListResponse> {
-  const response =
-    await apiClient<WarehouseApiResponse>(
-      "/warehouses",
-      {
-        method: "GET",
-      },
-    );
+export async function getWarehouses(): Promise<WarehouseListResponse> {
+  const response = await apiClient<WarehouseApiResponse>("/warehouses", {
+    method: "GET",
+  });
 
-  const warehouses =
-    response.data.map(
-      (warehouse) => ({
-        id:
-          warehouse.id.value,
+  const warehouses = response.data.map((warehouse) => ({
+    id: warehouse.id.value,
 
-        name:
-          warehouse.name,
+    name: warehouse.name,
 
-        addressSite:
-          warehouse.addressSite,
+    addressSite: warehouse.addressSite,
 
-        isActive:
-          warehouse.isActive,
-      }),
-    );
+    isActive: warehouse.isActive,
+  }));
 
   return {
     success: true,
 
-    data:
-      warehouses,
-    meta:
-      response.meta,
+    data: warehouses,
+    meta: response.meta,
   };
 }
 
-export async function getLocations():
-  Promise<LocationListResponse> {
-  const response =
-    await apiClient<LocationApiResponse>(
-      "/locations",
-      {
-        method: "GET",
-      },
-    );
+export async function getLocations(): Promise<LocationListResponse> {
+  const response = await apiClient<LocationApiResponse>("/locations", {
+    method: "GET",
+  });
 
-  const locations =
-    response.data.map(
-      (location) => ({
-        id:
-          location.id.value,
+  const locations = response.data.map((location) => ({
+    id: location.id.value,
 
-        warehouse_id:
-          location
-            .warehouseId
-            .value,
+    warehouse_id: location.warehouseId.value,
 
-        zone:
-          location.zone,
+    zone: location.zone,
 
-        isActive:
-          location.isActive,
-      }),
-    );
+    isActive: location.isActive,
+  }));
 
   return {
     success: true,
-    data:
-      locations,
-    meta:
-      response.meta,
+    data: locations,
+    meta: response.meta,
   };
 }
-
 
 const MASTER_PRODUCT_CATEGORY_TO_API: Partial<
-  Record<
-    MasterProductCategory,
-    MasterProductApiCategory
-  >
+  Record<MasterProductCategory, MasterProductApiCategory>
 > = {
-  "Electrical Component":
-    "ELECTRICAL_COMPONENT",
+  "Electrical Component": "ELECTRICAL_COMPONENT",
 
-  "Mechanical Component":
-    "MECHANICAL_COMPONENT",
+  "Mechanical Component": "MECHANICAL_COMPONENT",
 
-  "IT Component":
-    "IT_COMPONENT",
+  "IT Component": "IT_COMPONENT",
 
-  "Administration Component":
-    "ADMINISTRATION_COMPONENT",
+  "Administration Component": "ADMINISTRATION_COMPONENT",
 
-  Other:
-    "OTHER",
+  Other: "OTHER",
 };
-
 
 const MASTER_PRODUCT_CATEGORY_FROM_API: Record<
   MasterProductApiCategory,
   MasterProductCategory
 > = {
-  ELECTRICAL_COMPONENT:
-    "Electrical Component",
+  ELECTRICAL_COMPONENT: "Electrical Component",
 
-  MECHANICAL_COMPONENT:
-    "Mechanical Component",
+  MECHANICAL_COMPONENT: "Mechanical Component",
 
-  IT_COMPONENT:
-    "IT Component",
+  IT_COMPONENT: "IT Component",
 
-  ADMINISTRATION_COMPONENT:
-    "Administration Component",
+  ADMINISTRATION_COMPONENT: "Administration Component",
 
-  OTHER:
-    "Other",
+  OTHER: "Other",
 };
-
 
 const MASTER_PRODUCT_MEASUREMENT_FROM_API: Record<
   MasterProductApiMeasurement,
@@ -156,18 +111,10 @@ const MASTER_PRODUCT_MEASUREMENT_FROM_API: Record<
   LITER: "liter",
 };
 
-function mapMasterProductFromApi(
-  product: MasterProductApiItem,
-): MasterProduct {
-  const category =
-    MASTER_PRODUCT_CATEGORY_FROM_API[
-      product.category
-    ];
+function mapMasterProductFromApi(product: MasterProductApiItem): MasterProduct {
+  const category = MASTER_PRODUCT_CATEGORY_FROM_API[product.category];
 
-  const measurement =
-    MASTER_PRODUCT_MEASUREMENT_FROM_API[
-      product.measurement
-    ];
+  const measurement = MASTER_PRODUCT_MEASUREMENT_FROM_API[product.measurement];
 
   if (!category) {
     throw new Error(
@@ -182,32 +129,24 @@ function mapMasterProductFromApi(
   }
 
   return {
-    id:
-      product.id.value,
+    id: product.id.value,
 
-    name:
-      product.name,
+    name: product.name,
 
     category,
 
     measurement,
 
-    brand:
-      product.brand,
+    brand: product.brand,
 
-    description:
-      product.description ??
-      undefined,
+    description: product.description ?? undefined,
   };
 }
 
 function mapMasterProductInputToApi(
   input: MasterProductInput,
 ): MasterProductApiInput {
-  const apiCategory =
-    MASTER_PRODUCT_CATEGORY_TO_API[
-      input.category
-    ];
+  const apiCategory = MASTER_PRODUCT_CATEGORY_TO_API[input.category];
 
   if (!apiCategory) {
     throw new Error(
@@ -216,85 +155,56 @@ function mapMasterProductInputToApi(
   }
 
   return {
-    name:
-      input.name,
+    name: input.name,
 
-    category:
-      apiCategory,
+    category: apiCategory,
 
-    measurement:
-      input.measurement.toUpperCase() as
-        MasterProductApiMeasurement,
+    measurement: input.measurement.toUpperCase() as MasterProductApiMeasurement,
 
-    brand:
-      input.brand,
+    brand: input.brand,
 
-    description:
-      input.description,
+    description: input.description,
   };
 }
 
-export async function getMasterProducts():
-  Promise<MasterProductListResponse> {
-  const response =
-    await apiClient<MasterProductApiResponse>(
-      "/master-products",
-      {
-        method: "GET",
-      },
-    );
+export async function getMasterProducts(): Promise<MasterProductListResponse> {
+  const response = await apiClient<MasterProductApiResponse>(
+    "/master-products",
+    {
+      method: "GET",
+    },
+  );
 
-  const masterProducts =
-    response.data.map(
-      mapMasterProductFromApi,
-    );
+  const masterProducts = response.data.map(mapMasterProductFromApi);
 
   return {
     success: true,
-    data:
-      masterProducts,
-    meta:
-      response.meta,
+    data: masterProducts,
+    meta: response.meta,
   };
 }
 
 export async function createMasterProduct(
   input: MasterProductInput,
 ): Promise<MasterProductCreateResponse> {
-  const apiInput =
-    mapMasterProductInputToApi(
-      input,
-    );
+  const apiInput = mapMasterProductInputToApi(input);
 
-  await apiClient<null>(
-    "/master-products",
-    {
-      method: "POST",
+  await apiClient<null>("/master-products", {
+    method: "POST",
 
-      body:
-        apiInput,
-    },
+    body: apiInput,
+  });
+
+  const refreshed = await getMasterProducts();
+
+  const createdProduct = refreshed.data.find(
+    (product) =>
+      product.name === input.name &&
+      product.category === input.category &&
+      product.measurement === input.measurement &&
+      product.brand === input.brand &&
+      (product.description ?? "") === (input.description ?? ""),
   );
-
-  const refreshed =
-    await getMasterProducts();
-
-  const createdProduct =
-    refreshed.data.find(
-      (product) =>
-        product.name ===
-          input.name &&
-        product.category ===
-          input.category &&
-        product.measurement ===
-          input.measurement &&
-        product.brand ===
-          input.brand &&
-        (product.description ??
-          "") ===
-          (input.description ??
-            ""),
-    );
 
   if (!createdProduct) {
     throw new Error(
@@ -305,28 +215,63 @@ export async function createMasterProduct(
   return {
     success: true,
 
-    data:
-      createdProduct,
+    data: createdProduct,
   };
 }
 
-export async function createReceiving(
-  input: ReceivingInput,
-) {
-  return apiClient<ReceivingTransactionResponse>(
-    "/transactions/receiving",
+
+function mapTaggedUnitFromApi(
+  taggedUnit: TaggedUnitProductApiItem,
+): TaggedUnit {
+  return {
+    id: taggedUnit.id.value,
+    tagCode: taggedUnit.tagCode,
+    statusTag: taggedUnit.statusTag,
+    productStatus: taggedUnit.productStatus,
+    quantity: taggedUnit.quantity,
+    productCondition: taggedUnit.productCondition,
+    no_ref: taggedUnit.no_ref,
+    locationId: taggedUnit.locationId.value,
+    masterProductId: taggedUnit.masterProductId.value,
+    masterProductStatus: taggedUnit.masterProductStatus,
+  };
+}
+
+export async function getTaggedUnitByTagCode(
+  tagCode: string,
+): Promise<TaggedUnit> {
+  const response = await apiClient<TaggedUnitApiResponse>(
+    `/tagged-units?tagCode=${encodeURIComponent(tagCode)}`,
     {
-      method: "POST",
-
-      body:
-        input,
-
-      // TEMPORARY:
-      // Aktifkan kembali jika Receiving real
-      // masih belum tersedia dan memang masih
-      // ingin fallback ke Microcks.
-      //
-      // fallbackToMock: true,
+      method: "GET",
     },
   );
+
+  const taggedUnit = response.data.find((item) => item.tagCode === tagCode);
+
+  if (!taggedUnit) {
+    throw new Error(
+      `Tagged unit "${tagCode}" was not found after registration.`,
+    );
+  }
+
+  return mapTaggedUnitFromApi(taggedUnit);
+}
+
+export async function registerTaggedUnit(
+  input: TaggedUnitApiInput,
+): Promise<TaggedUnit> {
+  await apiClient<null>("/tagged-units", {
+    method: "POST",
+    body: input,
+  });
+
+  return getTaggedUnitByTagCode(input.tagCode);
+}
+
+export async function createReceiving(input: ReceivingInput) {
+  return apiClient<ReceivingTransactionResponse>("/transactions/receiving", {
+    method: "POST",
+    body: input,
+  });
 }

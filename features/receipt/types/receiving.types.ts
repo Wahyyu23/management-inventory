@@ -175,3 +175,51 @@ export type ReceivingTransactionResponse = {
   success: boolean;
   data: ReceivingTransaction;
 };
+
+export type TaggedUnitStatusTag = "ACTIVE" | "DAMAGED" | "LOST" | "INACTIVED";
+
+export type TaggedUnitProductStatus =
+  | "NEWLY_REGISTERED"
+  | "IN_WAREHOUSE"
+  | "IN_USE"
+  | "BORROWED";
+
+export type TaggedUnitProductCondition = "GOOD" | "DAMAGED";
+
+export type TaggedUnitApiInput = {
+  tagCode: string;
+  productStatus: TaggedUnitProductStatus;
+  quantity: number;
+  productCondition: TaggedUnitProductCondition;
+  no_reff: string;
+  locationId: string;
+  masterProductId: string;
+};
+
+export type TaggedUnitProductApiItem = {
+  id: ApiIdentifier;
+  tagCode: string;
+  statusTag: TaggedUnitStatusTag;
+  productStatus: TaggedUnitProductStatus;
+  quantity: number;
+  productCondition: TaggedUnitProductCondition | null;
+  no_ref: string;
+  locationId: ApiIdentifier;
+  masterProductId: ApiIdentifier;
+  masterProductStatus: TaggedUnitProductStatus;
+};
+
+export type TaggedUnitApiResponse = ApiListResponse<TaggedUnitProductApiItem>;
+
+export type TaggedUnit = {
+  id: string;
+  tagCode: string;
+  statusTag: TaggedUnitStatusTag;
+  productStatus: TaggedUnitProductStatus;
+  quantity: number;
+  productCondition: TaggedUnitProductCondition | null;
+  no_ref: string | null;
+  locationId: string;
+  masterProductId: string;
+  masterProductStatus: TaggedUnitProductStatus;
+};

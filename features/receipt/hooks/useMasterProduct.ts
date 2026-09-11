@@ -22,11 +22,7 @@ export function useMasterProducts() {
     await mutate(
       (current: MasterProductListResponse | undefined) => {
         if (!current) {
-          return {
-            success: true,
-            data: [product],
-            meta: null,
-          };
+          return current;
         }
 
         const alreadyExists = current.data.some(
@@ -37,20 +33,18 @@ export function useMasterProducts() {
           return current;
         }
 
-        const totalItems = (current.meta?.total_items ?? 0) + 1;
+        const totalElements = current.meta.totalElements + 1;
 
         return {
           ...current,
 
           data: [...current.data, product],
 
-          meta: current.meta
-            ? {
+          meta: {
                 ...current.meta,
-                total_items: totalItems,
-                total_pages: Math.ceil(totalItems / current.meta.limit),
+                totalElements,
+                totalPages: current.meta.totalPages,
               }
-            : null,
         };
       },
       {

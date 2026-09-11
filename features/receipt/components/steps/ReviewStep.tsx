@@ -32,7 +32,6 @@ export function ReviewStep({
     proofPhotoUrl,
     tagCode,
     qty,
-    childUnitQty,
   ] = useWatch({
     control,
     name: [
@@ -45,7 +44,6 @@ export function ReviewStep({
       "proof_photo_url",
       "tag_code",
       "qty",
-      "child_unit_qty",
     ],
   });
 
@@ -212,14 +210,6 @@ export function ReviewStep({
             value={typeof qty === "number" ? String(qty) : "-"}
           />
 
-          {isPackageMeasurement && (
-            <ReviewItem
-              label="Child Unit Quantity"
-              value={
-                typeof childUnitQty === "number" ? String(childUnitQty) : "-"
-              }
-            />
-          )}
         </ReviewSection>
       </div>
 
